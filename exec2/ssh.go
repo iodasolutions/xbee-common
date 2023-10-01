@@ -40,8 +40,14 @@ func Connect(host string, port string, user string) (client *SSHClient, err *uti
 		return
 	}
 	if aSession, err4 := conn.NewSession(); err4 == nil {
+		f := func() *util.XbeeError {
+			if err := aSession.Close(); err != nil {
+				return util.Error("cannot close session for %s: %v", connexionString, err)
+			}
+			return nil
+		}
 		defer func() {
-			err = util.CloseWithError(aSession, err)
+			err = util.CloseWithError(f, err)
 		}()
 		client = &SSHClient{conn: conn}
 	}
@@ -67,7 +73,13 @@ func (c *SSHClient) RunCommandToOut(command string) (out string, err *util.XbeeE
 		return "", util.Error("cannot create session : %v", err2)
 	}
 	defer func() {
-		err = util.CloseWithError(sess, err)
+		f := func() *util.XbeeError {
+			if err := sess.Close(); err != nil {
+				return util.Error("cannot close session: %v", err)
+			}
+			return nil
+		}
+		err = util.CloseWithError(f, err)
 	}()
 	w := NewMachineOnlyReadableWriter()
 	we := NewMachineOnlyReadableWriter()
@@ -90,7 +102,13 @@ func (c *SSHClient) run(command string, redirectStd bool) (err *util.XbeeError) 
 		return util.Error("cannot create session : %v", err2)
 	}
 	defer func() {
-		err = util.CloseWithError(sess, err)
+		f := func() *util.XbeeError {
+			if err := sess.Close(); err != nil {
+				return util.Error("cannot close session: %v", err)
+			}
+			return nil
+		}
+		err = util.CloseWithError(f, err)
 	}()
 	if redirectStd {
 		sess.Stdout = os.Stdout
@@ -141,12 +159,24 @@ func (c *SSHClient) Upload(path newfs.File, todir newfs.Folder) (err error) {
 		return
 	}
 	defer func() {
-		err = util.CloseWithError(session, err)
+		f := func() *util.XbeeError {
+			if err := session.Close(); err != nil {
+				return util.Error("cannot close session: %v", err)
+			}
+			return nil
+		}
+		err = util.CloseWithError(f, err)
 	}()
 	go func() {
 		w, _ := session.StdinPipe()
 		defer func() {
-			err = util.CloseWithError(w, err)
+			f := func() *util.XbeeError {
+				if err := w.Close(); err != nil {
+					return util.Error("cannot close session: %v", err)
+				}
+				return nil
+			}
+			err = util.CloseWithError(f, err)
 		}()
 		//		fmt.Fprintln(w, "D0755", 0, "xbee") // mkdir
 		if err = uploadInternScp(string(path), w); err != nil {
@@ -174,7 +204,13 @@ func uploadInternScp(path string, w io.Writer) (err error) {
 		return
 	}
 	defer func() {
-		err = util.CloseWithError(file, err)
+		f := func() *util.XbeeError {
+			if err := file.Close(); err != nil {
+				return util.Error("cannot close f %s: %v", file, err)
+			}
+			return nil
+		}
+		err = util.CloseWithError(f, err)
 	}()
 	length := fileInfo.Size()
 	mode := fmt.Sprintf("%#o", fileInfo.Mode())

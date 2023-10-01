@@ -1,12 +1,10 @@
 package util
 
-import (
-	"io"
-)
+type Closer func() *XbeeError
 
-func CloseWithError(s io.Closer, err error) *XbeeError {
-	if s != nil {
-		err2 := s.Close()
+func CloseWithError(close Closer, err error) *XbeeError {
+	if close != nil {
+		err2 := close()
 		if err2 != nil && err2.Error() == "EOF" { //skip this kind of error, which is caused by server closing first.
 			err2 = nil
 		}
