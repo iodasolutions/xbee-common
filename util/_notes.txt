@@ -1,0 +1,2 @@
+Le package util ne peut dépendre que de cmd
+

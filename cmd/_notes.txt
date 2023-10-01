@@ -1,0 +1,1 @@
+Le package cmd doit etre indépendant.

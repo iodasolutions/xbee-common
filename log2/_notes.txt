@@ -1,0 +1,1 @@
+log2 ne peut dépendre que de cmd.
