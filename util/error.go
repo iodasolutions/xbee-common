@@ -16,7 +16,7 @@ func init() {
 
 func Error(format string, args ...interface{}) *XbeeError {
 	var stack string
-	if isStackEnabled() {
+	if IsStackEnabled() {
 		stack = generateStack()
 	}
 	return &XbeeError{
@@ -28,7 +28,7 @@ func Error(format string, args ...interface{}) *XbeeError {
 
 func CauseBy(origins ...*XbeeError) *XbeeError {
 	var stack string
-	if isStackEnabled() {
+	if IsStackEnabled() {
 		stack = generateStack()
 		for _, origin := range origins {
 			origin.SkipLast(5)
@@ -121,4 +121,4 @@ func (xe *XbeeError) trimStack() string {
 	return output
 }
 
-func isStackEnabled() bool { return stackOption.BooleanValue() }
+func IsStackEnabled() bool { return stackOption.BooleanValue() }
