@@ -6,7 +6,6 @@ import (
 	"github.com/iodasolutions/xbee-common/cmd"
 	"github.com/iodasolutions/xbee-common/log2"
 	"github.com/iodasolutions/xbee-common/template"
-	"github.com/iodasolutions/xbee-common/util"
 	"sync"
 )
 
@@ -52,7 +51,7 @@ func dockerScript(info *InstanceInfo) string {
 	}
 	w := &bytes.Buffer{}
 	if err := template.OutputWithTemplate(script, w, model, nil); err != nil {
-		panic(util.Error("failed to parse network template : %v", err))
+		panic(cmd.Error("failed to parse network template : %v", err))
 	}
 	return w.String()
 }

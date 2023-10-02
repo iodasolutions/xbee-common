@@ -3,6 +3,7 @@ package exec2
 import (
 	"context"
 	"fmt"
+	"github.com/iodasolutions/xbee-common/cmd"
 	"github.com/iodasolutions/xbee-common/log2"
 	"github.com/iodasolutions/xbee-common/newfs"
 	"github.com/iodasolutions/xbee-common/util"
@@ -17,14 +18,14 @@ type SSHClient struct {
 	conn *ssh.Client
 }
 
-func Connect(host string, port string, user string) (client *SSHClient, err *util.XbeeError) {
+func Connect(host string, port string, user string) (client *SSHClient, err *cmd.XbeeError) {
 	var aConf *ssh.ClientConfig
 	rg := newfs.NewRsaGen("")
 	xbeeKey := rg.RootKeyPEM().Content()
 	pemBytes := []byte(xbeeKey)
 	signer, err2 := ssh.ParsePrivateKey(pemBytes)
 	if err2 != nil {
-		err = util.Error("ssh : parse key %s failed for host %s : %v", xbeeKey, host, err2)
+		err = cmd.Error("ssh : parse key %s failed for host %s : %v", xbeeKey, host, err2)
 		return
 	}
 	aConf = &ssh.ClientConfig{
@@ -36,13 +37,13 @@ func Connect(host string, port string, user string) (client *SSHClient, err *uti
 	connexionString := fmt.Sprintf("%s:%s", host, port)
 	conn, err3 := ssh.Dial("tcp", connexionString, aConf)
 	if err3 != nil {
-		err = util.Error("ssh : cannot connect to %s with user %s : %v", connexionString, user, err3)
+		err = cmd.Error("ssh : cannot connect to %s with user %s : %v", connexionString, user, err3)
 		return
 	}
 	if aSession, err4 := conn.NewSession(); err4 == nil {
-		f := func() *util.XbeeError {
+		f := func() *cmd.XbeeError {
 			if err := aSession.Close(); err != nil {
-				return util.Error("cannot close session for %s: %v", connexionString, err)
+				return cmd.Error("cannot close session for %s: %v", connexionString, err)
 			}
 			return nil
 		}
@@ -53,29 +54,29 @@ func Connect(host string, port string, user string) (client *SSHClient, err *uti
 	}
 	return
 }
-func (c *SSHClient) Close() *util.XbeeError {
+func (c *SSHClient) Close() *cmd.XbeeError {
 	if c.conn != nil {
 		err := c.conn.Close()
 		if err != nil {
-			return util.Error("%v", err)
+			return cmd.Error("%v", err)
 		}
 	}
 	return nil
 }
 
-func (c *SSHClient) RunCommand(command string) *util.XbeeError {
+func (c *SSHClient) RunCommand(command string) *cmd.XbeeError {
 	return c.run(command, true)
 }
 
-func (c *SSHClient) RunCommandToOut(command string) (out string, err *util.XbeeError) {
+func (c *SSHClient) RunCommandToOut(command string) (out string, err *cmd.XbeeError) {
 	sess, err2 := c.conn.NewSession()
 	if err2 != nil {
-		return "", util.Error("cannot create session : %v", err2)
+		return "", cmd.Error("cannot create session : %v", err2)
 	}
 	defer func() {
-		f := func() *util.XbeeError {
+		f := func() *cmd.XbeeError {
 			if err := sess.Close(); err != nil {
-				return util.Error("cannot close session: %v", err)
+				return cmd.Error("cannot close session: %v", err)
 			}
 			return nil
 		}
@@ -86,25 +87,25 @@ func (c *SSHClient) RunCommandToOut(command string) (out string, err *util.XbeeE
 	sess.Stdout = w
 	sess.Stderr = we
 	if err2 = sess.Run(command); err2 != nil {
-		err = util.Error("This command [%s] failed : %s", command, we.String())
+		err = cmd.Error("This command [%s] failed : %s", command, we.String())
 	} else {
 		out = w.String()
 	}
 	return
 }
-func (c *SSHClient) RunCommandQuiet(command string) *util.XbeeError {
+func (c *SSHClient) RunCommandQuiet(command string) *cmd.XbeeError {
 	return c.run(command, false)
 }
 
-func (c *SSHClient) run(command string, redirectStd bool) (err *util.XbeeError) {
+func (c *SSHClient) run(command string, redirectStd bool) (err *cmd.XbeeError) {
 	sess, err2 := c.conn.NewSession()
 	if err2 != nil {
-		return util.Error("cannot create session : %v", err2)
+		return cmd.Error("cannot create session : %v", err2)
 	}
 	defer func() {
-		f := func() *util.XbeeError {
+		f := func() *cmd.XbeeError {
 			if err := sess.Close(); err != nil {
-				return util.Error("cannot close session: %v", err)
+				return cmd.Error("cannot close session: %v", err)
 			}
 			return nil
 		}
@@ -117,7 +118,7 @@ func (c *SSHClient) run(command string, redirectStd bool) (err *util.XbeeError) 
 	}
 	err2 = sess.Run(command)
 	if err2 != nil {
-		err = util.Error("run command in session failed : %v", err2)
+		err = cmd.Error("run command in session failed : %v", err2)
 	}
 	return
 }
@@ -159,9 +160,9 @@ func (c *SSHClient) Upload(path newfs.File, todir newfs.Folder) (err error) {
 		return
 	}
 	defer func() {
-		f := func() *util.XbeeError {
+		f := func() *cmd.XbeeError {
 			if err := session.Close(); err != nil {
-				return util.Error("cannot close session: %v", err)
+				return cmd.Error("cannot close session: %v", err)
 			}
 			return nil
 		}
@@ -170,9 +171,9 @@ func (c *SSHClient) Upload(path newfs.File, todir newfs.Folder) (err error) {
 	go func() {
 		w, _ := session.StdinPipe()
 		defer func() {
-			f := func() *util.XbeeError {
+			f := func() *cmd.XbeeError {
 				if err := w.Close(); err != nil {
-					return util.Error("cannot close session: %v", err)
+					return cmd.Error("cannot close session: %v", err)
 				}
 				return nil
 			}
@@ -204,9 +205,9 @@ func uploadInternScp(path string, w io.Writer) (err error) {
 		return
 	}
 	defer func() {
-		f := func() *util.XbeeError {
+		f := func() *cmd.XbeeError {
 			if err := file.Close(); err != nil {
-				return util.Error("cannot close f %s: %v", file, err)
+				return cmd.Error("cannot close f %s: %v", file, err)
 			}
 			return nil
 		}

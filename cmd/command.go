@@ -12,10 +12,10 @@ type Command struct {
 	Long         string
 	Aliases      []string
 	Hidden       bool
-	Run          func([]string) error
+	Run          func([]string) *XbeeError
 	commands     map[string]*Command
 	Options      []*Option
-	ValidateArgs func([]string) error
+	ValidateArgs func([]string) *XbeeError
 	parent       *Command // used to display usage
 }
 
@@ -26,7 +26,7 @@ func NewCommand(name string, aliases ...string) *Command {
 	}
 }
 
-func (c *Command) WithRun(f func([]string) error) *Command {
+func (c *Command) WithRun(f func([]string) *XbeeError) *Command {
 	c.Run = f
 	return c
 }

@@ -19,7 +19,7 @@ func upCommand() *cmd.Command {
 	}
 }
 
-func doUp(_ []string) error {
+func doUp(_ []string) *cmd.XbeeError {
 	envName := EnvId().ShortName()
 	log2.Infof("Create/Start all instances from environment %s and wait...", envName)
 	r, err := provider.Up()

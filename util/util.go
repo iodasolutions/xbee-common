@@ -1,8 +1,10 @@
 package util
 
-type Closer func() *XbeeError
+import "github.com/iodasolutions/xbee-common/cmd"
 
-func CloseWithError(close Closer, err error) *XbeeError {
+type Closer func() *cmd.XbeeError
+
+func CloseWithError(close Closer, err error) *cmd.XbeeError {
 	if close != nil {
 		err2 := close()
 		if err2 != nil && err2.Error() == "EOF" { //skip this kind of error, which is caused by server closing first.
@@ -10,14 +12,14 @@ func CloseWithError(close Closer, err error) *XbeeError {
 		}
 		if err2 != nil {
 			if err == nil {
-				return Error("cannot close : %v", err2)
+				return cmd.Error("cannot close : %v", err2)
 			} else {
-				return Error("close operation failed: %v. First error was : %v", err2, err)
+				return cmd.Error("close operation failed: %v. First error was : %v", err2, err)
 			}
 		}
 	}
 	if err == nil {
 		return nil
 	}
-	return Error("%v", err)
+	return cmd.Error("%v", err)
 }

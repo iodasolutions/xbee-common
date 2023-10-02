@@ -16,7 +16,7 @@ func instanceInfosFile() newfs.File {
 	return newfs.ChildXbee(newfs.CWD()).ChildFileJson("InstanceInfos")
 }
 
-func doInstanceInfo(_ []string) error {
+func doInstanceInfo(_ []string) *cmd.XbeeError {
 	infos, err := provider.InstanceInfos()
 	if err == nil {
 		f := instanceInfosFile()

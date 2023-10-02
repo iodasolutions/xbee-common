@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"github.com/iodasolutions/xbee-common/cmd"
 	"github.com/iodasolutions/xbee-common/exec2"
 	"github.com/iodasolutions/xbee-common/newfs"
 	"github.com/iodasolutions/xbee-common/util"
@@ -43,7 +44,7 @@ type InstanceInfoForEnv map[string]*InstanceInfo
 func InstanceInfosFromProvider() InstanceInfoForEnv {
 	f := instanceInfosFile()
 	if !f.Exists() {
-		panic(util.Error("file %s MUST exist", f))
+		panic(cmd.Error("file %s MUST exist", f))
 	}
 	instanceInfos := map[string]*InstanceInfo{}
 	f.Unmarshal(&instanceInfos)

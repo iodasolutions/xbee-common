@@ -13,7 +13,7 @@ func deleteCommand() *cmd.Command {
 	}
 }
 
-func doDelete(_ []string) error {
+func doDelete(_ []string) *cmd.XbeeError {
 	envName := EnvId().ShortName()
 	log2.Infof("Delete all instances from environment %s and wait...", envName)
 	err := provider.Delete()

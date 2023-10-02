@@ -1,17 +1,16 @@
-package util
+package cmd
 
 import (
 	"bytes"
 	"fmt"
-	"github.com/iodasolutions/xbee-common/cmd"
 	"runtime"
 	"strings"
 )
 
-var stackOption = cmd.NewBooleanOption("stack", "", true).WithDescription("If an unexpected error occurs, turn on this flag to display stack trace")
+var stackOption = NewBooleanOption("stack", "", true).WithDescription("If an unexpected error occurs, turn on this flag to display stack trace")
 
 func init() {
-	cmd.Register(stackOption)
+	Register(stackOption)
 }
 
 func Error(format string, args ...interface{}) *XbeeError {

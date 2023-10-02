@@ -1,7 +1,6 @@
 package provider
 
 import (
-	"fmt"
 	"github.com/iodasolutions/xbee-common/cmd"
 	"github.com/iodasolutions/xbee-common/log2"
 	"github.com/iodasolutions/xbee-common/newfs"
@@ -12,13 +11,13 @@ var provider Provider
 var admin Admin
 
 type Provider interface {
-	Up() (*InitialStatus, error)
-	Delete() error
-	InstanceInfos() (map[string]*InstanceInfo, error)
+	Up() (*InitialStatus, *cmd.XbeeError)
+	Delete() *cmd.XbeeError
+	InstanceInfos() (map[string]*InstanceInfo, *cmd.XbeeError)
 }
 
 type Admin interface {
-	DestroyVolumes([]string) error
+	DestroyVolumes([]string) *cmd.XbeeError
 }
 
 func Execute(p Provider, a Admin) {
@@ -30,7 +29,7 @@ func Execute(p Provider, a Admin) {
 	admin = a
 	ok, err := cmd.Setup(buildCmdTree)
 	if !ok {
-		err = fmt.Errorf("unknown action : %s", os.Args[1])
+		err = cmd.Error("unknown action : %s", os.Args[1])
 	}
 	if err == nil {
 		err = cmd.Run()

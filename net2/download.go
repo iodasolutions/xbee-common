@@ -3,9 +3,9 @@ package net2
 import (
 	"context"
 	"fmt"
+	"github.com/iodasolutions/xbee-common/cmd"
 	"github.com/iodasolutions/xbee-common/log2"
 	"github.com/iodasolutions/xbee-common/newfs"
-	"github.com/iodasolutions/xbee-common/util"
 	"github.com/jlaffaye/ftp"
 	"io"
 	"net/http"
@@ -18,7 +18,7 @@ import (
 
 const bytesToMegaBytes = 1048576.0
 
-func DownloadIfNotCached(ctx context.Context, rawUrl string) (newfs.File, *util.XbeeError) {
+func DownloadIfNotCached(ctx context.Context, rawUrl string) (newfs.File, *cmd.XbeeError) {
 	f := newfs.XbeeIntern().CachedFileForUrl(rawUrl)
 	if !f.Exists() {
 		err := DoDownload(ctx, rawUrl)
@@ -28,7 +28,7 @@ func DownloadIfNotCached(ctx context.Context, rawUrl string) (newfs.File, *util.
 	}
 	return f, nil
 }
-func DownloadIfNotCachedWithWget(ctx context.Context, rawUrl string) (newfs.File, *util.XbeeError) {
+func DownloadIfNotCachedWithWget(ctx context.Context, rawUrl string) (newfs.File, *cmd.XbeeError) {
 	f := newfs.XbeeIntern().CachedFileForUrl(rawUrl)
 	if !f.Exists() {
 		err := DoDownloadWget(ctx, rawUrl)
@@ -39,11 +39,11 @@ func DownloadIfNotCachedWithWget(ctx context.Context, rawUrl string) (newfs.File
 	return f, nil
 }
 
-func DoDownload(ctx context.Context, rawUrl string) *util.XbeeError {
+func DoDownload(ctx context.Context, rawUrl string) *cmd.XbeeError {
 
 	anUrl, err := url.Parse(rawUrl)
 	if err != nil {
-		return util.Error("cannot parse %s : %v", rawUrl, err)
+		return cmd.Error("cannot parse %s : %v", rawUrl, err)
 	}
 	var pt *PassThru
 	if anUrl.Scheme == "ftp" {
@@ -53,7 +53,7 @@ func DoDownload(ctx context.Context, rawUrl string) *util.XbeeError {
 		}
 		c, err := ftp.Dial(fmt.Sprintf("%s:%s", anUrl.Host, portS), ftp.DialWithTimeout(5*time.Second))
 		if err != nil {
-			return util.Error("cannot connect to %s : %v", anUrl.Host, err)
+			return cmd.Error("cannot connect to %s : %v", anUrl.Host, err)
 		}
 		user := anUrl.User.Username()
 		pass, _ := anUrl.User.Password()
@@ -63,12 +63,12 @@ func DoDownload(ctx context.Context, rawUrl string) *util.XbeeError {
 		}
 		err = c.Login(user, pass)
 		if err != nil {
-			return util.Error("login to %s failed : %v", anUrl.Host, err)
+			return cmd.Error("login to %s failed : %v", anUrl.Host, err)
 		}
 		aPath := newfs.Path(anUrl.Path)
 		entries, err := c.List(aPath.Dir().String())
 		if err != nil {
-			return util.Error("cannot list content of host %s, path %s : %v", anUrl.Host, aPath.Dir(), err)
+			return cmd.Error("cannot list content of host %s, path %s : %v", anUrl.Host, aPath.Dir(), err)
 		}
 		var size int64
 		for _, anEntry := range entries {
@@ -80,18 +80,18 @@ func DoDownload(ctx context.Context, rawUrl string) *util.XbeeError {
 		r, err := c.Retr(anUrl.Path)
 
 		if err != nil {
-			return util.Error("%v", err)
+			return cmd.Error("%v", err)
 		}
 		defer r.Close()
 		pt = NewPathThru(r, size)
 	} else { // default is http or https
 		resp, err := http.Get(rawUrl)
 		if err != nil {
-			return util.Error("Failed invoke http GET on url %s : %v\n", rawUrl, err)
+			return cmd.Error("Failed invoke http GET on url %s : %v\n", rawUrl, err)
 		}
 		defer resp.Body.Close()
 		if resp.StatusCode != 200 {
-			return util.Error("Server responded with status code = %d for url %s", resp.StatusCode, rawUrl)
+			return cmd.Error("Server responded with status code = %d for url %s", resp.StatusCode, rawUrl)
 		}
 		pt = NewPathThru(resp.Body, resp.ContentLength)
 	}
@@ -103,7 +103,7 @@ func DoDownload(ctx context.Context, rawUrl string) *util.XbeeError {
 	}
 	return pt.DownloadTo(f)
 }
-func DoDownloadWget(ctx context.Context, rawUrl string) *util.XbeeError {
+func DoDownloadWget(ctx context.Context, rawUrl string) *cmd.XbeeError {
 	f := newfs.XbeeIntern().CachedFileForUrl(rawUrl)
 	fd := f.Dir()
 	fd.EnsureExists()
@@ -114,13 +114,13 @@ func DoDownloadWget(ctx context.Context, rawUrl string) *util.XbeeError {
 	execC.Stdin = os.Stdin
 	execC.Dir = fd.String()
 	if err := execC.Run(); err != nil {
-		return util.Error("command %v failed : %v", execC.String(), err)
+		return cmd.Error("command %v failed : %v", execC.String(), err)
 	}
 	if hUser := HostUser(); hUser != nil {
 		uid, _ := strconv.Atoi(hUser.Uid())
 		gid, _ := strconv.Atoi(hUser.Gid())
 		if err := os.Chown(f.String(), uid, gid); err != nil {
-			return util.Error("Cannot set ownership to %s:%s for file %s", hUser.Uid(), hUser.Gid(), f)
+			return cmd.Error("Cannot set ownership to %s:%s for file %s", hUser.Uid(), hUser.Gid(), f)
 		}
 	}
 	return nil
@@ -173,18 +173,18 @@ func (pt *PassThru) printProgress(curr, total int64) {
 	fmt.Print(message)
 }
 
-func (pt *PassThru) DownloadTo(f newfs.File) *util.XbeeError {
+func (pt *PassThru) DownloadTo(f newfs.File) *cmd.XbeeError {
 	tmpFile := newfs.File(f.String() + ".tmp")
 	size := tmpFile.FillFromReader(pt)
 	fmt.Print("\n")
 	if err := os.Rename(tmpFile.String(), f.String()); err != nil {
-		return util.Error("cannot rename %s to %s", tmpFile, f)
+		return cmd.Error("cannot rename %s to %s", tmpFile, f)
 	}
 	if hUser := HostUser(); hUser != nil {
 		uid, _ := strconv.Atoi(hUser.Uid())
 		gid, _ := strconv.Atoi(hUser.Gid())
 		if err := os.Chown(f.String(), uid, gid); err != nil {
-			return util.Error("Cannot set ownership to %s:%s for file %s", hUser.Uid(), hUser.Gid(), f)
+			return cmd.Error("Cannot set ownership to %s:%s for file %s", hUser.Uid(), hUser.Gid(), f)
 		}
 	}
 	log2.Infof("Resource %s Transferred. (%.1f MB)\n", f.Base(), float64(size)/bytesToMegaBytes)

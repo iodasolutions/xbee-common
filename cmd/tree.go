@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 )
 
@@ -78,14 +77,14 @@ func filterValuesOption(option string, args []string) ([]string, []string) {
 	}
 }
 
-func Setup(f func(*Command)) (bool, error) {
+func Setup(f func(*Command)) (bool, *XbeeError) {
 	f(&root)
 	args := Args
 	if len(args) > 0 && args[0] == "help" {
 		isHelp = true
 		args = args[1:]
 	}
-	var err error
+	var err *XbeeError
 	leaf, realArgs, err = findRunnable(&root, args)
 	return leaf != nil, err
 }
@@ -102,10 +101,9 @@ func IsHelp() bool {
 	return isH || isHelp
 }
 
-func Run() error {
+func Run() *XbeeError {
 	if leaf.ValidateArgs != nil {
 		if err := leaf.ValidateArgs(realArgs); err != nil {
-			fmt.Println(leaf.Usage())
 			return err
 		}
 	}
@@ -115,13 +113,13 @@ func Run() error {
 func Leaf() *Command     { return leaf }
 func RealArgs() []string { return realArgs }
 
-func findRunnable(c *Command, args []string) (*Command, []string, error) {
+func findRunnable(c *Command, args []string) (*Command, []string, *XbeeError) {
 	if c.Run != nil {
 		realArgs := NewArgsParser(c.Options).ParseArgs(args...)
 		return c, realArgs, nil
 	}
 	if len(args) == 0 {
-		return nil, nil, fmt.Errorf("Command %s needs a subcommand among %v\n", c.Use, c.SubCommandNames())
+		return nil, nil, Error("Command %s needs a subcommand among %v\n", c.Use, c.SubCommandNames())
 	}
 	name := args[0]
 	var childFound *Command

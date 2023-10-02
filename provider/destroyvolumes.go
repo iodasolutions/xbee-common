@@ -9,6 +9,6 @@ func destroyVolumesCommand() *cmd.Command {
 	}
 }
 
-func doDestroyVolumes(args []string) error {
+func doDestroyVolumes(args []string) *cmd.XbeeError {
 	return admin.DestroyVolumes(args)
 }

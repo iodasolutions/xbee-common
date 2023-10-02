@@ -2,9 +2,9 @@ package provider
 
 import (
 	"bytes"
+	"github.com/iodasolutions/xbee-common/cmd"
 	"github.com/iodasolutions/xbee-common/newfs"
 	"github.com/iodasolutions/xbee-common/template"
-	"github.com/iodasolutions/xbee-common/util"
 	"strings"
 )
 
@@ -32,7 +32,7 @@ func AuthorizedKeyScript(user string) string {
 	w := &bytes.Buffer{}
 	model := authorizedKeyModel(user)
 	if err := template.OutputWithTemplate(authorizedKey, w, model, nil); err != nil {
-		panic(util.Error("failed to parse userData template : %v", err))
+		panic(cmd.Error("failed to parse userData template : %v", err))
 	}
 	return w.String()
 }

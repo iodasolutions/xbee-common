@@ -2,6 +2,7 @@ package util
 
 import (
 	"context"
+	"github.com/iodasolutions/xbee-common/cmd"
 	"sync"
 )
 
@@ -35,15 +36,15 @@ func Multiplex[T any](ctx context.Context, channels ...<-chan T) <-chan T {
 	return multiplexedStream
 }
 
-type Executor func(ctx context.Context) *XbeeError
+type Executor func(ctx context.Context) *cmd.XbeeError
 
 // Execute run functions concurrently, and returns any error encountered by these functions.
-func Execute(ctx context.Context, funcs ...Executor) *XbeeError {
+func Execute(ctx context.Context, funcs ...Executor) *cmd.XbeeError {
 	if len(funcs) == 0 {
 		return nil
 	}
-	var errors []*XbeeError
-	errCh := make(chan *XbeeError)
+	var errors []*cmd.XbeeError
+	errCh := make(chan *cmd.XbeeError)
 	waitCh := make(chan bool)
 	go func() {
 		for {
@@ -72,7 +73,7 @@ func Execute(ctx context.Context, funcs ...Executor) *XbeeError {
 	close(errCh)
 	<-waitCh
 	if len(errors) > 0 {
-		return CauseBy(errors...)
+		return cmd.CauseBy(errors...)
 	}
 	return nil
 }

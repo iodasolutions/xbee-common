@@ -3,7 +3,7 @@ package exec2
 import (
 	"context"
 	"fmt"
-	"github.com/iodasolutions/xbee-common/util"
+	"github.com/iodasolutions/xbee-common/cmd"
 	"os"
 	"os/exec"
 	"os/user"
@@ -63,14 +63,14 @@ func (c *Command) Quiet() *Command {
 }
 
 func (c *Command) createCmd(ctx context.Context) *exec.Cmd {
-	var cmd *exec.Cmd
+	var aCmd *exec.Cmd
 	name := c.name
 	args := c.args
 
 	if c.user != "" {
 		currentUser, err := user.Current()
 		if err != nil { // this should not occur
-			panic(util.Error("cannot get current user : %v", err))
+			panic(cmd.Error("cannot get current user : %v", err))
 		}
 		if c.user != currentUser.Name {
 			name = "su"
@@ -79,9 +79,9 @@ func (c *Command) createCmd(ctx context.Context) *exec.Cmd {
 	}
 
 	if ctx != nil {
-		cmd = exec.CommandContext(ctx, name, args...)
+		aCmd = exec.CommandContext(ctx, name, args...)
 	} else {
-		cmd = exec.Command(c.name, args...)
+		aCmd = exec.Command(c.name, args...)
 	}
 
 	if c.quiet {
@@ -89,20 +89,20 @@ func (c *Command) createCmd(ctx context.Context) *exec.Cmd {
 	} else {
 		c.bErr = NewStdErrMachineReadableWriter()
 		if c.bOut == nil {
-			cmd.Stdout = os.Stdout
+			aCmd.Stdout = os.Stdout
 		} else {
-			cmd.Stdout = c.bOut
+			aCmd.Stdout = c.bOut
 		}
-		cmd.Stdin = os.Stdin
+		aCmd.Stdin = os.Stdin
 	}
-	cmd.Stderr = c.bErr
+	aCmd.Stderr = c.bErr
 
-	cmd.Dir = c.directory
+	aCmd.Dir = c.directory
 	if c.env != nil {
-		cmd.Env = c.env
+		aCmd.Env = c.env
 	}
 
-	return cmd
+	return aCmd
 }
 
 func (c *Command) Run(ctx context.Context) error {

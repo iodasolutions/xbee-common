@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"github.com/iodasolutions/xbee-common/cmd"
 	"github.com/iodasolutions/xbee-common/newfs"
 	"github.com/iodasolutions/xbee-common/util"
 )
@@ -10,7 +11,7 @@ func upStatusFile() newfs.File { return newfs.ChildXbee(newfs.CWD()).ChildFileJs
 func UpStatusFromProvider() *InitialStatus {
 	f := upStatusFile()
 	if !f.Exists() {
-		panic(util.Error("file %s MUST exist", f))
+		panic(cmd.Error("file %s MUST exist", f))
 	}
 	var status InitialStatus
 	f.Unmarshal(&status)
