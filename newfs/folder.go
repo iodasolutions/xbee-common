@@ -370,3 +370,17 @@ func (fd Folder) TarTo(dir Folder, name string) (File, error) {
 	}
 	return finalFile, nil
 }
+
+func (fd Folder) TarGz() (File, error) {
+	dir := tmpDir.RandomChildFolder().Create()
+	finalFile := dir.ChildFile(fd.Base() + ".tar.gz")
+	var sources []string
+	for _, child := range fd.Children() {
+		sources = append(sources, child.String())
+	}
+	err := archiver.Archive(sources, finalFile.String())
+	if err != nil {
+		return "", fmt.Errorf("cannot make compressed tar %s from folder %s", finalFile, fd)
+	}
+	return finalFile, nil
+}
