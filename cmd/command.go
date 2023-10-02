@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"bytes"
-	"fmt"
 	"text/template"
 )
 
@@ -34,7 +33,7 @@ func (c *Command) HasOptions() bool {
 	return len(c.Options) > 0
 }
 
-func (c *Command) AddCommand(child *Command) (bool, error) {
+func (c *Command) AddCommand(child *Command) (bool, *XbeeError) {
 	if c.commands == nil {
 		c.commands = make(map[string]*Command)
 	}
@@ -44,13 +43,13 @@ func (c *Command) AddCommand(child *Command) (bool, error) {
 		return true, nil
 	} else {
 		if child.Run != nil {
-			return false, fmt.Errorf("cannot add leaf command %s to %s, one already added", child.Use, c.Use)
+			return false, Error("cannot add leaf command %s to %s, one already added", child.Use, c.Use)
 		}
 		existingChild.AddCommands(child.commandsList()...)
 	}
 	return false, nil
 }
-func (c *Command) AddCommands(cmds ...*Command) error {
+func (c *Command) AddCommands(cmds ...*Command) *XbeeError {
 	for _, aCmd := range cmds {
 		if _, err := c.AddCommand(aCmd); err != nil {
 			return err
@@ -59,29 +58,29 @@ func (c *Command) AddCommands(cmds ...*Command) error {
 	return nil
 }
 
-func (c *Command) AvailableSubCommandsToDisplay() (string, error) {
+func (c *Command) AvailableSubCommandsToDisplay() (string, *XbeeError) {
 	t := template.New("subcommands")
 	t, err := t.Parse(subCommandsTpl)
 	if err != nil { //should not occur
-		return "", fmt.Errorf("unexpected internal error when trying to parse template that list sub commands : %v", err)
+		return "", Error("unexpected internal error when trying to parse template that list sub commands : %v", err)
 	}
 	sb := new(bytes.Buffer)
 	err = t.Execute(sb, c.commands)
 	if err != nil {
-		return "", fmt.Errorf("unexpected internal error when trying to render the list of sub commands : %v", err)
+		return "", Error("unexpected internal error when trying to render the list of sub commands : %v", err)
 	}
 	return sb.String(), nil
 }
-func (c *Command) Usage() (string, error) {
+func (c *Command) Usage() (string, *XbeeError) {
 	t := template.New("usage")
 	t, err := t.Parse(usageTpl)
 	if err != nil { //should not occur
-		return "", fmt.Errorf("unexpected internal error when trying to parse template that show command usage : %v", err)
+		return "", Error("unexpected internal error when trying to parse template that show command usage : %v", err)
 	}
 	sb := new(bytes.Buffer)
 	err = t.Execute(sb, c)
 	if err != nil {
-		return "", fmt.Errorf("unexpected internal error when trying to render command usage : %v", err)
+		return "", Error("unexpected internal error when trying to render command usage : %v", err)
 	}
 	return sb.String(), nil
 }
@@ -117,28 +116,28 @@ func (c *Command) commandsList() (result []*Command) {
 	return
 }
 
-func ExactArgs(n int) func([]string) error {
-	f := func(args []string) error {
+func ExactArgs(n int) func([]string) *XbeeError {
+	f := func(args []string) *XbeeError {
 		if len(args) != n {
-			return fmt.Errorf("expected %d args, actual is %d", n, len(args))
+			return Error("expected %d args, actual is %d", n, len(args))
 		}
 		return nil
 	}
 	return f
 }
-func MinArgs(n int) func([]string) error {
-	f := func(args []string) error {
+func MinArgs(n int) func([]string) *XbeeError {
+	f := func(args []string) *XbeeError {
 		if len(args) < n {
-			return fmt.Errorf("expected at least %d args, actual is %d", n, len(args))
+			return Error("expected at least %d args, actual is %d", n, len(args))
 		}
 		return nil
 	}
 	return f
 }
-func MaxArgs(n int) func([]string) error {
-	f := func(args []string) error {
+func MaxArgs(n int) func([]string) *XbeeError {
+	f := func(args []string) *XbeeError {
 		if len(args) > n {
-			return fmt.Errorf("expected at most %d args, actual is %d", n, len(args))
+			return Error("expected at most %d args, actual is %d", n, len(args))
 		}
 		return nil
 	}

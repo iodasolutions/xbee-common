@@ -113,16 +113,16 @@ func (op *Option) AddValue(value string) {
 	op.isSet = true
 }
 
-func (op *Option) SetStringValue(newValue string) error {
+func (op *Option) SetStringValue(newValue string) *XbeeError {
 	if op.isBool {
-		return fmt.Errorf("cannot set string value to boolean option %s\n", op.Name)
+		return Error("cannot set string value to boolean option %s\n", op.Name)
 	}
 	op.stringValues = []string{newValue}
 	return nil
 }
-func (op *Option) SetBooleanValue(newValue bool) error {
+func (op *Option) SetBooleanValue(newValue bool) *XbeeError {
 	if !op.isBool {
-		return fmt.Errorf("cannot set boolean value to option %s", op.Name)
+		return Error("cannot set boolean value to option %s", op.Name)
 	}
 	op.booleanValue = newValue
 	op.isSet = true
@@ -137,12 +137,12 @@ func AsMap(options []*Option) map[string]*Option {
 	return optionMap
 }
 
-func (op *Option) SplitColon() (map[string]string, error) {
+func (op *Option) SplitColon() (map[string]string, *XbeeError) {
 	result := map[string]string{}
 	for _, elt := range op.StringValues() {
 		splitted := strings.Split(elt, ":")
 		if len(splitted) != 2 {
-			return nil, fmt.Errorf("option %s MUST have format X:Y, actual is %s", op.Name, elt)
+			return nil, Error("option %s MUST have format X:Y, actual is %s", op.Name, elt)
 		}
 		result[splitted[1]] = splitted[0]
 	}
