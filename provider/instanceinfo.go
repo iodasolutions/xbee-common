@@ -41,14 +41,16 @@ func (info InstanceInfo) Enter(ctx context.Context, user string) error {
 
 type InstanceInfoForEnv map[string]*InstanceInfo
 
-func InstanceInfosFromProvider() InstanceInfoForEnv {
+func InstanceInfosFromProvider() (InstanceInfoForEnv, *cmd.XbeeError) {
 	f := instanceInfosFile()
 	if !f.Exists() {
 		panic(cmd.Error("file %s MUST exist", f))
 	}
-	instanceInfos := map[string]*InstanceInfo{}
-	f.Unmarshal(&instanceInfos)
-	return instanceInfos
+	if instanceInfos, err := newfs.Unmarshal[map[string]*InstanceInfo](f); err != nil {
+		return nil, err
+	} else {
+		return instanceInfos, nil
+	}
 }
 
 func (m InstanceInfoForEnv) FilterByState(states ...string) InstanceInfoForEnv {

@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"github.com/iodasolutions/xbee-common/cmd"
 	"github.com/iodasolutions/xbee-common/newfs"
 	"github.com/iodasolutions/xbee-common/types"
 	"github.com/iodasolutions/xbee-common/util"
@@ -46,8 +47,10 @@ var env struct {
 }
 
 func initEnv() {
-	env.Env = &Env{}
-	EnvJson().Unmarshal(env.Env)
+	var err *cmd.XbeeError
+	if env.Env, err = newfs.Unmarshal[*Env](EnvJson()); err != nil {
+		newfs.DoExitOnError(err)
+	}
 }
 
 func Hosts() (result []*Host) {

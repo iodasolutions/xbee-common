@@ -8,14 +8,16 @@ import (
 
 func upStatusFile() newfs.File { return newfs.ChildXbee(newfs.CWD()).ChildFileJson("InitialStatus") }
 
-func UpStatusFromProvider() *InitialStatus {
+func UpStatusFromProvider() (*InitialStatus, *cmd.XbeeError) {
 	f := upStatusFile()
 	if !f.Exists() {
 		panic(cmd.Error("file %s MUST exist", f))
 	}
-	var status InitialStatus
-	f.Unmarshal(&status)
-	return &status
+	if status, err := newfs.Unmarshal[*InitialStatus](f); err != nil {
+		return nil, err
+	} else {
+		return status, nil
+	}
 }
 
 type InitialStatus struct {
