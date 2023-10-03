@@ -15,7 +15,8 @@ import (
 )
 
 type SSHClient struct {
-	conn *ssh.Client
+	conn     *ssh.Client
+	hostPort string
 }
 
 func Connect(host string, port string, user string) (client *SSHClient, err *cmd.XbeeError) {
@@ -50,7 +51,10 @@ func Connect(host string, port string, user string) (client *SSHClient, err *cmd
 		defer func() {
 			err = util.CloseWithError(f, err)
 		}()
-		client = &SSHClient{conn: conn}
+		client = &SSHClient{
+			conn:     conn,
+			hostPort: connexionString,
+		}
 	}
 	return
 }
@@ -123,13 +127,13 @@ func (c *SSHClient) run(command string, redirectStd bool) (err *cmd.XbeeError) {
 	return
 }
 
-func (c *SSHClient) RunScript(script string) error {
+func (c *SSHClient) RunScript(script string) *cmd.XbeeError {
 	return c.runScript(script, true)
 }
 func (c *SSHClient) RunScriptQuiet(script string) error {
 	return c.runScript(script, false)
 }
-func (c *SSHClient) runScript(script string, redirectStd bool) (err error) {
+func (c *SSHClient) runScript(script string, redirectStd bool) (err *cmd.XbeeError) {
 	f := newfs.EnsureTmpDir().RandomFile()
 	defer func() {
 		err2 := f.EnsureDelete()
@@ -137,7 +141,7 @@ func (c *SSHClient) runScript(script string, redirectStd bool) (err error) {
 			if err == nil {
 				err = err2
 			} else {
-				err = fmt.Errorf("closing session failed: %v. First error was : %v", err2, err)
+				err = cmd.Error("closing session failed: %v. First error was : %v", err2, err)
 			}
 		}
 	}()
@@ -150,14 +154,14 @@ func (c *SSHClient) runScript(script string, redirectStd bool) (err error) {
 	return
 }
 
-func (c *SSHClient) Upload(path newfs.File, todir newfs.Folder) (err error) {
-	if err = c.RunCommandQuiet(fmt.Sprintf("sudo mkdir -p %s", todir)); err != nil {
-		return
+func (c *SSHClient) Upload(path newfs.File, todir newfs.Folder) *cmd.XbeeError {
+	if err := c.RunCommandQuiet(fmt.Sprintf("sudo mkdir -p %s", todir)); err != nil {
+		return err
 	}
 	var session *ssh.Session
-	session, err = c.conn.NewSession()
+	session, err := c.conn.NewSession()
 	if err != nil {
-		return
+		return cmd.Error("cannot create a session for connection %s: %v", c.hostPort, err)
 	}
 	defer func() {
 		f := func() *cmd.XbeeError {
@@ -190,8 +194,10 @@ func (c *SSHClient) Upload(path newfs.File, todir newfs.Folder) (err error) {
 
 	}()
 	command := fmt.Sprintf("sudo /usr/bin/scp -tr %s", todir)
-	err = session.Run(command)
-	return err
+	if err := session.Run(command); err != nil {
+		return cmd.Error("command [%s] for session [%s] failed: %v", command, c.hostPort, err)
+	}
+	return nil
 }
 
 func uploadInternScp(path string, w io.Writer) (err error) {
