@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/iodasolutions/xbee-common/cmd"
 	"github.com/iodasolutions/xbee-common/template"
 	"github.com/mholt/archiver/v3"
 	"io"
@@ -52,26 +53,12 @@ func (f File) ContentBytes() []byte {
 	return data
 }
 
-func (f File) Unmarshal(o interface{}) {
-	if f.Exists() {
-		if err := f.UnmarshalWithError(o); err != nil {
-			panic(fmt.Errorf("cannot unmarshal json file %s : %v\n", f, err))
-		}
-	}
-}
-
-func Unmarshal[T any](f File) (T, error) {
+func Unmarshal[T any](f File) (T, *cmd.XbeeError) {
 	var t T
-	err := json.Unmarshal(f.ContentBytes(), &t)
-	return t, err
-}
-
-func (f File) UnmarshalWithError(o interface{}) (err error) {
-	data := f.ContentBytes()
-	if data != nil {
-		err = json.Unmarshal(data, o)
+	if err := json.Unmarshal(f.ContentBytes(), &t); err != nil {
+		return t, cmd.Error("cannot unmarshal %s: %s", f, err)
 	}
-	return
+	return t, nil
 }
 
 func (f File) BaseWithoutExtension() string {
@@ -107,17 +94,14 @@ func (f File) OpenFileForCreation() *os.File {
 	return fd
 }
 
-func (f File) EnsureDelete() error {
+func (f File) EnsureDelete() *cmd.XbeeError {
 	if !f.Exists() {
 		return nil
 	}
-	return os.Remove(string(f))
-}
-
-func (f File) AsMap() map[string]interface{} {
-	m := make(map[string]interface{})
-	f.Unmarshal(&m)
-	return m
+	if err := os.Remove(string(f)); err != nil {
+		return cmd.Error("cannot remove %s: %v", f, err)
+	}
+	return nil
 }
 
 func (f File) Sha1() string {
@@ -217,10 +201,13 @@ func (f File) CanBeFiltered() bool {
 	return true
 }
 
-func (f File) FillWithTemplate(templateS string, data interface{}, funcMap map[string]interface{}) error {
+func (f File) FillWithTemplate(templateS string, data interface{}, funcMap map[string]interface{}) *cmd.XbeeError {
 	fp := f.OpenFileForCreation()
 	defer fp.Close()
-	return template.OutputWithTemplate(templateS, fp, data, funcMap)
+	if err := template.OutputWithTemplate(templateS, fp, data, funcMap); err != nil {
+		return cmd.Error("cannot parse [%s] with variables [%s]: %v", templateS, data, err)
+	}
+	return nil
 }
 
 func (f File) SetContentBytes(content []byte) {
@@ -267,10 +254,13 @@ func (f File) DoZip() File {
 	return zipFile
 }
 
-func (f File) ExtractTo(outputDir Folder) error {
-	return archiver.Unarchive(string(f), outputDir.String())
+func (f File) ExtractTo(outputDir Folder) *cmd.XbeeError {
+	if err := archiver.Unarchive(string(f), outputDir.String()); err != nil {
+		return cmd.Error("cannot extract %s to %s: %v", f, outputDir, err)
+	}
+	return nil
 }
 
-func (f File) Untar() error {
+func (f File) Untar() *cmd.XbeeError {
 	return f.ExtractTo(f.Dir())
 }

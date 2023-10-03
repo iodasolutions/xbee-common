@@ -1,8 +1,9 @@
 package newfs
 
 import (
-	"fmt"
+	"github.com/iodasolutions/xbee-common/cmd"
 	"io"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -36,16 +37,16 @@ import (
 // destination file exists, all it's contents will be replaced by the contents
 // of the source file. The file mode will be copied from the source and
 // the copied data is synced/flushed to stable storage.
-func CopyFile(src, dst string) (err error) {
+func CopyFile(src, dst string) *cmd.XbeeError {
 	in, err := os.Open(src)
 	if err != nil {
-		return
+		return cmd.Error("cannot open %s: %v", src, err)
 	}
 	defer in.Close()
 
 	out, err := os.Create(dst)
 	if err != nil {
-		return
+		return cmd.Error("cannot create file %s: %v", dst, err)
 	}
 	defer func() {
 		if e := out.Close(); e != nil {
@@ -55,57 +56,58 @@ func CopyFile(src, dst string) (err error) {
 
 	_, err = io.Copy(out, in)
 	if err != nil {
-		return
+		return cmd.Error("cannot copy src %s to dst %s : %v", src, dst, err)
 	}
 
 	err = out.Sync()
 	if err != nil {
-		return
+		return cmd.Error("unexpected error when sync : %v", err)
 	}
 
 	si, err := os.Stat(src)
 	if err != nil {
-		return
+		return cmd.Error("cannot get info on file %s : %v", src, err)
 	}
 	err = os.Chmod(dst, si.Mode())
 	if err != nil {
-		return
+		return cmd.Error("cannot change properties of file %s with %s: %v", dst, si.Mode(), err)
 	}
 
-	return
+	return nil
 }
 
 // CopyDir recursively copies a directory tree, attempting to preserve permissions.
 // Source directory must exist, destination directory must *not* exist.
 // Symlinks are ignored and skipped.
-func CopyDir(src string, dst string) (err error) {
+func CopyDir(src string, dst string) *cmd.XbeeError {
 	src = filepath.Clean(src)
 	dst = filepath.Clean(dst)
 
 	si, err := os.Stat(src)
 	if err != nil {
-		return err
+		return cmd.Error("cannot modify properties of %s: %v", err)
+	} else {
+		if !si.IsDir() {
+			return cmd.Error("source is not a directory")
+		}
 	}
-	if !si.IsDir() {
-		return fmt.Errorf("source is not a directory")
-	}
-
 	_, err = os.Stat(dst)
 	if err != nil && !os.IsNotExist(err) {
-		return
+		return cmd.Error("unexpected error when accessing properties of %s: %v", dst, err)
 	}
 	if err == nil {
-		return fmt.Errorf("destination already exists")
+		return cmd.Error("destination already exists")
 	}
 
 	err = os.MkdirAll(dst, si.Mode())
 	if err != nil {
-		return
+		return cmd.Error("unable to create directory %s", dst)
 	}
 
-	entries, err := ioutil.ReadDir(src)
+	var entries []fs.FileInfo
+	entries, err = ioutil.ReadDir(src)
 	if err != nil {
-		return
+		return cmd.Error("cannot read content of %s", src)
 	}
 
 	for _, entry := range entries {
@@ -113,9 +115,9 @@ func CopyDir(src string, dst string) (err error) {
 		dstPath := filepath.Join(dst, entry.Name())
 
 		if entry.IsDir() {
-			err = CopyDir(srcPath, dstPath)
-			if err != nil {
-				return
+			err2 := CopyDir(srcPath, dstPath)
+			if err2 != nil {
+				return err2
 			}
 		} else {
 			// Skip symlinks.
@@ -123,12 +125,12 @@ func CopyDir(src string, dst string) (err error) {
 				continue
 			}
 
-			err = CopyFile(srcPath, dstPath)
-			if err != nil {
-				return
+			err2 := CopyFile(srcPath, dstPath)
+			if err2 != nil {
+				return err2
 			}
 		}
 	}
 
-	return
+	return nil
 }

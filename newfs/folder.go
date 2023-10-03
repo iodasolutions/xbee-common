@@ -2,6 +2,7 @@ package newfs
 
 import (
 	"fmt"
+	"github.com/iodasolutions/xbee-common/cmd"
 	"github.com/iodasolutions/xbee-common/stringutils"
 	"github.com/mholt/archiver/v3"
 	"io/ioutil"
@@ -70,36 +71,36 @@ func (fd Folder) Create() Folder {
 	return fd
 }
 
-func (fd Folder) DeleteDirContent() error {
+func (fd Folder) DeleteDirContent() *cmd.XbeeError {
 	if !fd.Exists() {
 		return nil
 	}
 	dir, err := os.Open(fd.String())
 	if err != nil {
-		return fmt.Errorf("cannot open %s : %v", dir, err)
+		return cmd.Error("cannot open %s : %v", dir, err)
 	}
 	defer dir.Close()
 	names, err := dir.Readdirnames(-1)
 	if err != nil {
-		return fmt.Errorf("cannot read folder content %s : %v", fd, err)
+		return cmd.Error("cannot read folder content %s : %v", fd, err)
 	}
 	for _, name := range names {
 		child := fd.ChildFile(name).String()
 		err = os.RemoveAll(child)
 		if err != nil {
-			return fmt.Errorf("cannot removeAll from %s : %v", child, err)
+			return cmd.Error("cannot removeAll from %s : %v", child, err)
 		}
 	}
 	return nil
 }
 
-func (fd Folder) Delete() error {
+func (fd Folder) Delete() *cmd.XbeeError {
 	if fd.Exists() {
 		if err := fd.DeleteDirContent(); err != nil {
 			return err
 		}
 		if err := os.Remove(fd.String()); err != nil {
-			return fmt.Errorf("cannot remove empty folder %s : %v", fd, err)
+			return cmd.Error("cannot remove empty folder %s : %v", fd, err)
 		}
 	}
 	return nil
@@ -355,10 +356,10 @@ func (fd Folder) RandomFile() File {
 	return fd.ChildFile(stringutils.RandomString())
 }
 
-func (fd Folder) MoveTo(dir Folder) error {
+func (fd Folder) MoveTo(dir Folder) *cmd.XbeeError {
 	return moveDirectory(string(fd), string(dir))
 }
-func (fd Folder) TarTo(dir Folder, name string) (File, error) {
+func (fd Folder) TarTo(dir Folder, name string) (File, *cmd.XbeeError) {
 	finalFile := dir.ChildFile(name + ".tar")
 	var sources []string
 	for _, child := range fd.Children() {
@@ -366,12 +367,12 @@ func (fd Folder) TarTo(dir Folder, name string) (File, error) {
 	}
 	err := archiver.Archive(sources, finalFile.String())
 	if err != nil {
-		return "", err
+		return "", cmd.Error("cannot archive folder %s to %s: %v", dir, finalFile, err)
 	}
 	return finalFile, nil
 }
 
-func (fd Folder) TarGz() (File, error) {
+func (fd Folder) TarGz() (File, *cmd.XbeeError) {
 	dir := tmpDir.RandomChildFolder().Create()
 	finalFile := dir.ChildFile(fd.Base() + ".tar.gz")
 	var sources []string
@@ -380,7 +381,7 @@ func (fd Folder) TarGz() (File, error) {
 	}
 	err := archiver.Archive(sources, finalFile.String())
 	if err != nil {
-		return "", fmt.Errorf("cannot make compressed tar %s from folder %s", finalFile, fd)
+		return "", cmd.Error("cannot make compressed tar %s from folder %s", finalFile, fd)
 	}
 	return finalFile, nil
 }
