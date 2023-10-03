@@ -2,7 +2,6 @@ package exec2
 
 import (
 	"context"
-	"fmt"
 	"github.com/iodasolutions/xbee-common/cmd"
 	"os"
 	"os/exec"
@@ -105,18 +104,20 @@ func (c *Command) createCmd(ctx context.Context) *exec.Cmd {
 	return aCmd
 }
 
-func (c *Command) Run(ctx context.Context) error {
+func (c *Command) Run(ctx context.Context) *cmd.XbeeError {
 	aCmd := c.createCmd(ctx)
 	err := aCmd.Run()
 	if err != nil {
-		return fmt.Errorf("this command (%s) failed : %v", c.String(), err)
+		return cmd.Error("this command (%s) failed : %v", c.String(), err)
 	}
 	return nil
 }
 
-func (c *Command) RunReturnStdOut(ctx context.Context) (string, error) {
+func (c *Command) RunReturnStdOut(ctx context.Context) (string, *cmd.XbeeError) {
 	c.bOut = NewStdOutMachineReadableWriter()
 	aCmd := c.createCmd(ctx)
-	err := aCmd.Run()
-	return c.bOut.String(), err
+	if err := aCmd.Run(); err != nil {
+		return c.bOut.String(), cmd.Error("this command (%s) failed : %v", c.String(), err)
+	}
+	return c.bOut.String(), nil
 }
