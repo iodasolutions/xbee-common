@@ -20,14 +20,14 @@ type InstanceInfo struct {
 	User       string `json:"user,omitempty"`
 }
 
-func (info InstanceInfo) Connect() (*exec2.SSHClient, error) {
+func (info InstanceInfo) Connect() (*exec2.SSHClient, *cmd.XbeeError) {
 	return exec2.Connect(info.ExternalIp, info.SSHPort, info.User)
 }
 
 func (info InstanceInfo) CheckSSH(ctx context.Context, user string) bool {
 	return exec2.CheckSSH(ctx, info.ExternalIp, info.SSHPort, user)
 }
-func (info InstanceInfo) Enter(ctx context.Context, user string) error {
+func (info InstanceInfo) Enter(ctx context.Context, user string) *cmd.XbeeError {
 	args := []string{"-i", newfs.NewRsaGen("").RootKeyPEM().String(),
 		"-p", info.SSHPort,
 		"-o", "StrictHostKeyChecking=no"}
@@ -36,7 +36,10 @@ func (info InstanceInfo) Enter(ctx context.Context, user string) error {
 	aCmd.Stdout = os.Stdout
 	aCmd.Stderr = os.Stderr
 	aCmd.Stdin = os.Stdin
-	return aCmd.Run()
+	if err := aCmd.Run(); err != nil {
+		return cmd.Error("command [%s] failed: %v", aCmd.String(), err)
+	}
+	return nil
 }
 
 type InstanceInfoForEnv map[string]*InstanceInfo
