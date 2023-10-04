@@ -130,7 +130,7 @@ func (c *SSHClient) run(command string, redirectStd bool) (err *cmd.XbeeError) {
 func (c *SSHClient) RunScript(script string) *cmd.XbeeError {
 	return c.runScript(script, true)
 }
-func (c *SSHClient) RunScriptQuiet(script string) error {
+func (c *SSHClient) RunScriptQuiet(script string) *cmd.XbeeError {
 	return c.runScript(script, false)
 }
 func (c *SSHClient) runScript(script string, redirectStd bool) (err *cmd.XbeeError) {

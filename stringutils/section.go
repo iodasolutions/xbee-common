@@ -2,6 +2,7 @@ package stringutils
 
 import (
 	"fmt"
+	"github.com/iodasolutions/xbee-common/cmd"
 	"strings"
 )
 
@@ -12,7 +13,7 @@ const (
 var xbeeStart = fmt.Sprintf(xbeeToken, "BEGIN") + "#Do not edit in this AREA\n"
 var xbeeEnd = fmt.Sprintf(xbeeToken, "END")
 
-func ExtractSection(content string) (xbeeSection string, otherSection string, index int, err error) {
+func ExtractSection(content string) (xbeeSection string, otherSection string, index int, err *cmd.XbeeError) {
 	indexStart := strings.Index(content, xbeeStart)
 	indexEnd := strings.Index(content, xbeeEnd)
 	if indexStart == -1 && indexEnd == -1 {
@@ -23,7 +24,7 @@ func ExtractSection(content string) (xbeeSection string, otherSection string, in
 		xbeeSection = content[indexStart+len(xbeeStart) : indexEnd]
 		otherSection = content[:indexStart] + content[indexEnd+len(xbeeEnd):]
 	} else {
-		err = fmt.Errorf("content %s has an unbounded XBEE AREA", content)
+		err = cmd.Error("content %s has an unbounded XBEE AREA", content)
 	}
 	return
 }

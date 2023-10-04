@@ -2,6 +2,7 @@ package stringutils
 
 import (
 	"fmt"
+	"github.com/iodasolutions/xbee-common/cmd"
 	uuid "github.com/nu7hatch/gouuid"
 	"math/rand"
 	"strconv"
@@ -20,10 +21,10 @@ func RandomString() string {
 	return u4.String()
 }
 
-func ValidatePortableFilenameCharacterSet(s string) error {
+func ValidatePortableFilenameCharacterSet(s string) *cmd.XbeeError {
 	for i, c := range s {
 		if !isCharacterPortableFilename(c) {
-			return fmt.Errorf("Character %c at index %d in string %s is not valid", c, i, s)
+			return cmd.Error("Character %c at index %d in string %s is not valid", c, i, s)
 		}
 	}
 	return nil

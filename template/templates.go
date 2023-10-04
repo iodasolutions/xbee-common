@@ -2,7 +2,7 @@ package template
 
 import (
 	"bytes"
-	"fmt"
+	"github.com/iodasolutions/xbee-common/cmd"
 	"io"
 	"net"
 	"path/filepath"
@@ -10,7 +10,7 @@ import (
 	"text/template"
 )
 
-func Output(s *string, data interface{}, funcMap map[string]interface{}) (err error) {
+func Output(s *string, data interface{}, funcMap map[string]interface{}) (err *cmd.XbeeError) {
 	templateString := *s
 	buf := &bytes.Buffer{}
 	err = OutputWithTemplate(templateString, buf, data, funcMap)
@@ -20,7 +20,7 @@ func Output(s *string, data interface{}, funcMap map[string]interface{}) (err er
 	return
 }
 
-func OutputWithTemplate(templateString string, wr io.Writer, data interface{}, funcMap map[string]interface{}) error {
+func OutputWithTemplate(templateString string, wr io.Writer, data interface{}, funcMap map[string]interface{}) *cmd.XbeeError {
 
 	appliedFuncMap := DefaultFunctions()
 	if funcMap != nil {
@@ -35,19 +35,19 @@ func OutputWithTemplate(templateString string, wr io.Writer, data interface{}, f
 				Funcs(appliedFuncMap).
 				Parse(section)
 			if err != nil {
-				return err
+				return cmd.Error("cannot load template to parse %s: %v", section, err)
 			}
 			buf := bytes.Buffer{}
 			err = tmpl.Execute(&buf, data)
 			if err != nil {
-				return err
+				return cmd.Error("cannot parse template to parse %s with data %v: %v", section, data, err)
 			}
 			if _, err := wr.Write(buf.Bytes()); err != nil {
-				return err
+				return cmd.Error("cannot write data: %v", err)
 			}
 		} else {
 			if _, err := wr.Write([]byte(section)); err != nil {
-				return err
+				return cmd.Error("cannot write section: %v", err)
 			}
 		}
 	}
@@ -85,8 +85,8 @@ func DefaultFunctions() template.FuncMap {
 	}
 }
 
-func ErrorFromCLI(errors []string, usage string) error {
-	return fmt.Errorf("\nERROR(s):\n%s\n\nUSAGE:\n%s", strings.Join(errors, "\n"), usage)
+func ErrorFromCLI(errors []string, usage string) *cmd.XbeeError {
+	return cmd.Error("\nERROR(s):\n%s\n\nUSAGE:\n%s", strings.Join(errors, "\n"), usage)
 }
 
 func dirPath(s string) string {
