@@ -20,6 +20,10 @@ var tmpDir = Folder(os.TempDir()).ChildFolder("xbee")
 func init() {
 	homeS, _ := os.UserHomeDir()
 	Home = Folder(homeS)
+	if !tmpDir.Exists() {
+		tmpDir.Create()
+		tmpDir.ChMod(0777)
+	}
 }
 
 func CWD() Folder {
@@ -30,14 +34,11 @@ func CWD() Folder {
 	return Folder(s)
 }
 
-func DeleteTmp() {
-	tmpDir.Delete()
+func DeleteTmp() error {
+	return tmpDir.DeleteDirContent()
 }
 
-func EnsureTmpDir() Folder {
-	if !tmpDir.Exists() {
-		tmpDir.Create()
-	}
+func TmpDir() Folder {
 	return tmpDir
 }
 

@@ -134,7 +134,7 @@ func (c *SSHClient) RunScriptQuiet(script string) *cmd.XbeeError {
 	return c.runScript(script, false)
 }
 func (c *SSHClient) runScript(script string, redirectStd bool) (err *cmd.XbeeError) {
-	f := newfs.EnsureTmpDir().RandomFile()
+	f := newfs.TmpDir().RandomFile()
 	defer func() {
 		err2 := f.EnsureDelete()
 		if err2 != nil {
