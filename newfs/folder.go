@@ -34,10 +34,6 @@ func CWD() Folder {
 	return Folder(s)
 }
 
-func DeleteTmp() error {
-	return tmpDir.DeleteDirContent()
-}
-
 func TmpDir() Folder {
 	return tmpDir
 }

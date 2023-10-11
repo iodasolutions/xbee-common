@@ -23,7 +23,6 @@ type Admin interface {
 func Execute(p Provider, a Admin) {
 	defer func() {
 		log2.Close()
-		newfs.DeleteTmp()
 	}()
 	provider = p
 	admin = a

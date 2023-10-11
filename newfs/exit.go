@@ -13,6 +13,5 @@ func DoExitOnError(err *cmd.XbeeError) {
 	}
 	fmt.Printf("ERROR: %v\n", err)
 	log2.Close()
-	DeleteTmp()
 	os.Exit(1)
 }
