@@ -1,11 +1,11 @@
 package newfs
 
 import (
-	"strings"
+	"path/filepath"
 )
 
 func (fd Folder) String() string {
-	return strings.ReplaceAll(string(fd), "\\", "\\\\")
+	return filepath.ToSlash(fd.String())
 }
 
 func (fd Folder) Owner() (uid int, gid int) {
