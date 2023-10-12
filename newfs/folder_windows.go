@@ -5,7 +5,7 @@ import (
 )
 
 func (fd Folder) String() string {
-	return filepath.ToSlash(fd.String())
+	return filepath.ToSlash(string(fd))
 }
 
 func (fd Folder) Owner() (uid int, gid int) {
