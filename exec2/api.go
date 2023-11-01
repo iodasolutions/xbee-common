@@ -11,5 +11,6 @@ func Run(ctx context.Context, name string, args ...string) *cmd.XbeeError {
 }
 func RunReturnStdOut(ctx context.Context, name string, args ...string) (string, *cmd.XbeeError) {
 	c := NewCommand(name, args...)
-	return c.RunReturnStdOut(ctx)
+	err := c.Run(ctx)
+	return c.Result(), err
 }

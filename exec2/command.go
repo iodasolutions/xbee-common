@@ -113,11 +113,11 @@ func (c *Command) Run(ctx context.Context) *cmd.XbeeError {
 	return nil
 }
 
-func (c *Command) RunReturnStdOut(ctx context.Context) (string, *cmd.XbeeError) {
-	c.bOut = NewStdOutMachineReadableWriter()
-	aCmd := c.createCmd(ctx)
-	if err := aCmd.Run(); err != nil {
-		return c.bOut.String(), cmd.Error("this command (%s) failed : %v", c.String(), err)
+func (c *Command) Result() string {
+	if c.bOut == nil {
+		return ""
+	} else {
+		result := c.bOut.String()
+		return result
 	}
-	return c.bOut.String(), nil
 }
