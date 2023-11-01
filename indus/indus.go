@@ -26,8 +26,12 @@ var osArchs = [][]string{
 }
 
 func Build(ctx context.Context, srcMainPath string, execName string) *cmd.XbeeError {
+	commit, release, err := CommitAndRelease(ctx)
+	if err != nil {
+		return err
+	}
 	for _, osArch := range osArchs {
-		if targetBin, err := buildFor(ctx, osArch[0], osArch[1], srcMainPath, execName); err != nil {
+		if targetBin, err := buildFor(ctx, commit, release, osArch[0], osArch[1], srcMainPath, execName); err != nil {
 			return err
 		} else {
 			copyMaybeToLocalBin(targetBin, osArch[0], osArch[1])
@@ -36,13 +40,25 @@ func Build(ctx context.Context, srcMainPath string, execName string) *cmd.XbeeEr
 	return nil
 }
 
-func SetCommitAndRelease() {
-	exec2.NewCommand("git", "rev-parse", "HEAD")
+func CommitAndRelease(ctx context.Context) (string, string, *cmd.XbeeError) {
+	commit, err := exec2.NewCommand("git", "rev-parse", "HEAD").RunReturnStdOut(ctx)
+	if err != nil {
+		return "", "", err
+	}
+	release, err := exec2.NewCommand("git", "describe", "--tags", commit).RunReturnStdOut(ctx)
+	if err != nil {
+		release = ""
+	}
+	return strings.TrimSpace(commit), strings.TrimSpace(release), nil
 }
 
 func BuildAndDeploy(ctx context.Context, srcMainPath string, execName string) *cmd.XbeeError {
+	commit, release, err := CommitAndRelease(ctx)
+	if err != nil {
+		return err
+	}
 	for _, osArch := range osArchs {
-		if binFile, err := buildFor(ctx, osArch[0], osArch[1], srcMainPath, execName); err != nil {
+		if binFile, err := buildFor(ctx, commit, release, osArch[0], osArch[1], srcMainPath, execName); err != nil {
 			return err
 		} else {
 			copyMaybeToLocalBin(binFile, osArch[0], osArch[1])
@@ -70,11 +86,12 @@ func BuildAndDeploy(ctx context.Context, srcMainPath string, execName string) *c
 	return nil
 }
 
-func buildFor(ctx context.Context, goos string, goarch string, srcMainPath string, execName string) (newfs.File, *cmd.XbeeError) {
+func buildFor(ctx context.Context, commit string, release string, goos string, goarch string, srcMainPath string, execName string) (newfs.File, *cmd.XbeeError) {
 	fmt.Printf("building %s for arch %s...", goos, goarch)
 	binFile := localBin(goos, goarch, execName)
 	binFile.Dir().EnsureEmpty()
-	aCmd := exec.CommandContext(ctx, "go", "build", "-gcflags", "all=-N -l", "-o", binFile.String(), fmt.Sprintf("%s/%s", newfs.CWD(), srcMainPath))
+	ldflags := fmt.Sprintf("-ldflags=\"-X util.XbeeRelease.Commit=%s -X util.XbeeRelease.Commit=%s\"", commit, release)
+	aCmd := exec.CommandContext(ctx, "go", "build", ldflags, "-gcflags", "all=-N -l", "-o", binFile.String(), fmt.Sprintf("%s/%s", newfs.CWD(), srcMainPath))
 	aCmd.Env = environmentFor(goos, goarch)
 	aCmd.Stderr = os.Stderr
 	aCmd.Stdout = os.Stdout
