@@ -90,7 +90,11 @@ func buildFor(ctx context.Context, commit string, release string, goos string, g
 	fmt.Printf("building %s for arch %s...", goos, goarch)
 	binFile := localBin(goos, goarch, execName)
 	binFile.Dir().EnsureEmpty()
-	ldflags := fmt.Sprintf("-ldflags=\"-X util.XbeeRelease.Commit=%s -X util.XbeeRelease.Commit=%s\"", commit, release)
+	ldflagsRelease := ""
+	if release != "" {
+		ldflagsRelease = fmt.Sprintf("-X util.GitRelease=%s", release)
+	}
+	ldflags := fmt.Sprintf("-ldflags=\"-X util.GitCommit=%s%s\"", commit, ldflagsRelease)
 	aCmd := exec.CommandContext(ctx, "go", "build", ldflags, "-gcflags", "all=-N -l", "-o", binFile.String(), fmt.Sprintf("%s/%s", newfs.CWD(), srcMainPath))
 	aCmd.Env = environmentFor(goos, goarch)
 	aCmd.Stderr = os.Stderr
