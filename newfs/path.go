@@ -34,7 +34,7 @@ func (p Path) String() string {
 }
 
 func (p Path) Child(name string) Path {
-	return Path(filepath.Join(string(p), name))
+	return Path(filepath.ToSlash(filepath.Join(string(p), name)))
 }
 
 func (p Path) BaseWithoutExtension() string {
