@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/iodasolutions/xbee-common/cmd"
+	"github.com/iodasolutions/xbee-common/exec2"
 	"github.com/iodasolutions/xbee-common/newfs"
 	"os"
 	"os/exec"
@@ -33,6 +34,10 @@ func Build(ctx context.Context, srcMainPath string, execName string) *cmd.XbeeEr
 		}
 	}
 	return nil
+}
+
+func SetCommitAndRelease() {
+	exec2.NewCommand("git", "rev-parse", "HEAD")
 }
 
 func BuildAndDeploy(ctx context.Context, srcMainPath string, execName string) *cmd.XbeeError {

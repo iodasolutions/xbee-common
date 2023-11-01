@@ -2,14 +2,15 @@ package util
 
 import (
 	"github.com/iodasolutions/xbee-common/cmd"
-	"github.com/iodasolutions/xbee-common/template"
 )
 
-// GitCommit set at build time
-var GitCommit string
-
-// GitRelease eventually modified at build time
-var GitRelease = "0.1.0-DEV"
+var XbeeRelease = struct {
+	Release string
+	Commit  string
+}{
+	Release: "0.1.0-DEV",
+	Commit:  "",
+}
 
 type Closer func() *cmd.XbeeError
 
@@ -31,25 +32,4 @@ func CloseWithError(close Closer, err error) *cmd.XbeeError {
 		return nil
 	}
 	return cmd.Error("%v", err)
-}
-
-// release: X.Y.Z for a released version, or X.Y.Z-DEV for a development version.
-// commit: hash of the commit of xbee repository, on which this binary was built.
-
-// CurrentVersion should be used by cli command version.
-func CurrentVersion() (string, *cmd.XbeeError) {
-	s := `
-Release: {{ .Release }}
-Commit: {{ .Commit }}
-`
-	data := struct {
-		Release string
-		Commit  string
-	}{
-		Release: GitRelease,
-		Commit:  GitCommit,
-	}
-	err := template.Output(&s, data, nil)
-	return s, err
-
 }
