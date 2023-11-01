@@ -11,6 +11,8 @@ var GitCommit string
 // GitRelease set at build time
 var GitRelease string
 
+const DevRelease = "0.1.0-DEV"
+
 type Closer func() *cmd.XbeeError
 
 func CloseWithError(close Closer, err error) *cmd.XbeeError {
@@ -42,11 +44,15 @@ func CurrentVersion() (string, *cmd.XbeeError) {
 Release: {{ .Release }}
 Commit: {{ .Commit }}
 `
+	release := GitRelease
+	if release == "" {
+		release = DevRelease
+	}
 	data := struct {
 		Release string
 		Commit  string
 	}{
-		Release: GitRelease,
+		Release: release,
 		Commit:  GitCommit,
 	}
 	err := template.Output(&s, data, nil)
