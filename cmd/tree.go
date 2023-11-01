@@ -77,8 +77,10 @@ func filterValuesOption(option string, args []string) ([]string, []string) {
 	}
 }
 
-func Setup(f func(*Command)) (bool, *XbeeError) {
-	f(&root)
+func Setup(f func(*Command) *XbeeError) (bool, *XbeeError) {
+	if err := f(&root); err != nil {
+		return false, err
+	}
 	args := Args
 	if len(args) > 0 && args[0] == "help" {
 		isHelp = true

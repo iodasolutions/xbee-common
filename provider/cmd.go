@@ -38,8 +38,8 @@ func Execute(p Provider, a Admin) {
 	}
 }
 
-func buildCmdTree(root *cmd.Command) {
-	root.AddCommands(upCommand(),
+func buildCmdTree(root *cmd.Command) *cmd.XbeeError {
+	return root.AddCommands(upCommand(),
 		deleteCommand(),
 		destroyVolumesCommand(),
 		instanceInfosCommand())
