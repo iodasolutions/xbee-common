@@ -10,7 +10,7 @@ func Run(ctx context.Context, name string, args ...string) *cmd.XbeeError {
 	return c.Run(ctx)
 }
 func RunReturnStdOut(ctx context.Context, name string, args ...string) (string, *cmd.XbeeError) {
-	c := NewCommand(name, args...)
+	c := NewCommand(name, args...).WithResult()
 	err := c.Run(ctx)
 	return c.Result(), err
 }
