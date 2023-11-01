@@ -42,13 +42,14 @@ func Build(ctx context.Context, srcMainPath string, execName string) *cmd.XbeeEr
 }
 
 func CommitAndRelease(ctx context.Context) (string, string, *cmd.XbeeError) {
-	commit, err := exec2.NewCommand("git", "rev-parse", "HEAD").RunReturnStdOut(ctx)
+	commit, err := exec2.RunReturnStdOut(ctx, "git", "rev-parse", "HEAD")
 	if err != nil {
 		return "", "", err
 	}
-	release, err := exec2.NewCommand("git", "describe", "--tags", commit).RunReturnStdOut(ctx)
-	if err != nil {
-		release = ""
+	aCmd := exec2.NewCommand("git", "describe", "--tags", commit).Quiet()
+	var release string
+	if err := aCmd.Run(ctx); err == nil {
+		release = aCmd.Result()
 	}
 	return strings.TrimSpace(commit), strings.TrimSpace(release), nil
 }
