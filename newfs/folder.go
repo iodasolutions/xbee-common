@@ -15,10 +15,11 @@ import (
 type Folder string
 
 var Home Folder
-var tmpDir = Folder(os.TempDir()).ChildFolder("xbee")
+var tmpDir = Folder(filepath.ToSlash(os.TempDir())).ChildFolder("xbee")
 
 func init() {
 	homeS, _ := os.UserHomeDir()
+	homeS = filepath.ToSlash(homeS)
 	Home = Folder(homeS)
 	if !tmpDir.Exists() {
 		tmpDir.Create()
@@ -31,6 +32,7 @@ func CWD() Folder {
 	if err != nil {
 		panic(err)
 	}
+	s = filepath.ToSlash(s)
 	return Folder(s)
 }
 
