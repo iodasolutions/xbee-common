@@ -8,10 +8,8 @@ import (
 // GitCommit set at build time
 var GitCommit string
 
-// GitRelease set at build time
-var GitRelease string
-
-const DevRelease = "0.1.0-DEV"
+// GitRelease eventually modified at build time
+var GitRelease = "0.1.0-DEV"
 
 type Closer func() *cmd.XbeeError
 
@@ -44,15 +42,11 @@ func CurrentVersion() (string, *cmd.XbeeError) {
 Release: {{ .Release }}
 Commit: {{ .Commit }}
 `
-	release := GitRelease
-	if release == "" {
-		release = DevRelease
-	}
 	data := struct {
 		Release string
 		Commit  string
 	}{
-		Release: release,
+		Release: GitRelease,
 		Commit:  GitCommit,
 	}
 	err := template.Output(&s, data, nil)
