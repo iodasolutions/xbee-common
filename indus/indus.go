@@ -95,7 +95,7 @@ func buildFor(ctx context.Context, commit string, release string, goos string, g
 	if release != "" {
 		ldflagsRelease = fmt.Sprintf(" -X 'github.com/iodasolutions/xbee-common/util.GitRelease=%s'", release)
 	}
-	formattedTime := time.Now().Format("2023-11-01 12:38:45")
+	formattedTime := time.Now().Format("2006-01-02 15:04:05")
 	ldflags := fmt.Sprintf("-X 'github.com/iodasolutions/xbee-common/util.BuildTime=%s' -X 'github.com/iodasolutions/xbee-common/util.GitCommit=%s'%s", formattedTime, commit, ldflagsRelease)
 	aCmd := exec.CommandContext(ctx, "go", "build", "-ldflags", ldflags, "-gcflags", "all=-N -l", "-o", binFile.String(), fmt.Sprintf("%s/%s", newfs.CWD(), srcMainPath))
 	aCmd.Env = environmentFor(goos, goarch)
