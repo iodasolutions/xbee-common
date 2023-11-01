@@ -10,7 +10,8 @@ import (
 	"strings"
 )
 
-var Bucket = "xbee.repository.public"
+const publicBucket = "xbee.repository.public"
+
 var osArchs = [][]string{
 	{
 		"windows", "amd64",
@@ -52,7 +53,7 @@ func BuildAndDeploy(ctx context.Context, srcMainPath string, execName string) *c
 			fmt.Printf("deploy %s...", osArch[0])
 			u := Unit{
 				Source: zFile,
-				Bucket: Bucket,
+				Bucket: publicBucket,
 				Key:    fmt.Sprintf("%s_%s", osArch[0], osArch[1]),
 			}
 			if err := u.UploadToS3(ctx); err != nil {
@@ -82,9 +83,9 @@ func buildFor(ctx context.Context, goos string, goarch string, srcMainPath strin
 
 func localBin(goos string, goarch string, execName string) newfs.File {
 	if goos == "windows" {
-		return localDir(Bucket, "windows", goarch).ChildFile(execName + ".exe")
+		return localDir(publicBucket, "windows", goarch).ChildFile(execName + ".exe")
 	} else {
-		return localDir(Bucket, goos, goarch).ChildFile(execName)
+		return localDir(publicBucket, goos, goarch).ChildFile(execName)
 	}
 }
 
