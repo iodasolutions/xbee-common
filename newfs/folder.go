@@ -237,7 +237,7 @@ func (fd Folder) ChMod(mod os.FileMode) {
 	}
 }
 func (fd Folder) Dir() Folder {
-	return Folder(filepath.Dir(string(fd)))
+	return Folder(filepath.ToSlash(filepath.Dir(string(fd))))
 }
 func (fd Folder) CopyDirContentToDir(dstDir Folder) {
 	dstDir.Create()
