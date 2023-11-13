@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-var stackOption = NewBooleanOption("stack", "", true).WithDescription("If an unexpected error occurs, turn on this flag to display stack trace")
+var stackOption = NewBooleanOption("stack", "", false).WithDescription("If an unexpected error occurs, turn on this flag to display stack trace")
 
 func init() {
 	Register(stackOption)
