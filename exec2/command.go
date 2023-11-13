@@ -14,7 +14,7 @@ type Command struct {
 	args []string
 
 	bErr   *MachineReadableWriter
-	bOut   *MachineReadableWriter
+	bOut   *MachineReadableWriter //not nil if result is true
 	quiet  bool
 	result bool
 
@@ -88,6 +88,7 @@ func (c *Command) createCmd(ctx context.Context) *exec.Cmd {
 		c.bErr = NewMachineOnlyReadableWriter()
 		if c.result {
 			c.bOut = NewMachineOnlyReadableWriter()
+			aCmd.Stdout = c.bOut
 		}
 	} else {
 		c.bErr = NewStdErrMachineReadableWriter()
