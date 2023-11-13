@@ -13,9 +13,10 @@ type Command struct {
 	name string
 	args []string
 
-	bErr  *MachineReadableWriter
-	bOut  *MachineReadableWriter
-	quiet bool
+	bErr   *MachineReadableWriter
+	bOut   *MachineReadableWriter
+	quiet  bool
+	result bool
 
 	user      string
 	directory string
@@ -38,7 +39,7 @@ func (c *Command) String() string {
 }
 
 func (c *Command) WithResult() *Command {
-	c.bOut = NewStdOutMachineReadableWriter()
+	c.result = true
 	return c
 }
 
@@ -85,12 +86,16 @@ func (c *Command) createCmd(ctx context.Context) *exec.Cmd {
 
 	if c.quiet {
 		c.bErr = NewMachineOnlyReadableWriter()
+		if c.result {
+			c.bOut = NewMachineOnlyReadableWriter()
+		}
 	} else {
 		c.bErr = NewStdErrMachineReadableWriter()
-		if c.bOut == nil {
-			aCmd.Stdout = os.Stdout
-		} else {
+		if c.result {
+			c.bOut = NewStdOutMachineReadableWriter()
 			aCmd.Stdout = c.bOut
+		} else {
+			aCmd.Stdout = os.Stdout
 		}
 		aCmd.Stdin = os.Stdin
 	}
