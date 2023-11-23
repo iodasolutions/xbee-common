@@ -11,10 +11,6 @@ var realArgs []string
 var isHelp bool
 var Args []string
 
-var InContainer bool
-var InVm bool
-var ContainerOption = "--xbeeContainer"
-var VmOption = "--xbeeVm"
 var UserOption = "--xbeeUID"
 var GroupOption = "--xbeeGID"
 var AliasOption = "--xbeeAlias"
@@ -27,15 +23,7 @@ var GroupId string
 var Envs []string
 
 func init() {
-	ok, args := filterBoolOption(ContainerOption, os.Args[1:])
-	if ok {
-		InContainer = true
-	} else {
-		ok, args = filterBoolOption(VmOption, args)
-		if ok {
-			InVm = true
-		}
-	}
+	args := os.Args[1:]
 	Alias, args = filterValueOption(AliasOption, args)
 	UserId, args = filterValueOption(UserOption, args)
 	GroupId, args = filterValueOption(GroupOption, args)

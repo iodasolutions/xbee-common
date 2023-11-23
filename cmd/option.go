@@ -5,12 +5,6 @@ import (
 	"strings"
 )
 
-var globalOptions = make(map[string]*Option)
-
-func init() {
-	AddGlobalBooleanOption("help", "h", false).WithDescription("Display usage information for this command")
-}
-
 func Register(option *Option) {
 	if _, ok := globalOptions[option.Name]; !ok {
 		globalOptions[option.Name] = option
