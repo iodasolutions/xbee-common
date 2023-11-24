@@ -11,22 +11,16 @@ var realArgs []string
 var isHelp bool
 var Args []string
 
-var UserOption = "--xbeeUID"
-var GroupOption = "--xbeeGID"
 var AliasOption = "--xbeeAlias"
 var Alias string
 var EnvOption = "-e"
 
 // var HostUser *user2.User
-var UserId string
-var GroupId string
 var Envs []string
 
 func init() {
 	args := os.Args[1:]
 	Alias, args = filterValueOption(AliasOption, args)
-	UserId, args = filterValueOption(UserOption, args)
-	GroupId, args = filterValueOption(GroupOption, args)
 	Envs, args = filterValuesOption(EnvOption, args)
 	Args = args
 }

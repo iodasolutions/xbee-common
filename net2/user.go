@@ -17,10 +17,11 @@ func (u *User) Uid() string { return u.uid }
 func (u *User) Gid() string { return u.gid }
 
 func HostUser() *User {
-	if cmd.UserId != "" {
+	user := cmd.UserID()
+	if user != "" {
 		return &User{
-			uid: cmd.UserId,
-			gid: cmd.GroupId,
+			uid: user,
+			gid: cmd.GroupID(),
 		}
 	}
 	return nil
