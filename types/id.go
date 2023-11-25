@@ -30,8 +30,7 @@ type IdJson struct {
 	Alias   string `json:"alias,omitempty"`
 }
 
-func (m *IdJson) Colon() string  { return m.WithDelimiter(":") }
-func (m *IdJson) Hyphen() string { return m.WithDelimiter("-") }
+func (m *IdJson) Colon() string { return m.WithDelimiter(":") }
 func (m *IdJson) OriginVersion() string {
 	var version string
 	if m.Version != "" {
@@ -44,14 +43,6 @@ func (m *IdJson) ShortName() string {
 		return m.Alias
 	}
 	return ShortNameFromOrigin(m.Origin)
-}
-
-func (m *IdJson) NameVersion() string {
-	var version string
-	if m.Version != "" {
-		version = fmt.Sprintf("-%s", m.Version)
-	}
-	return fmt.Sprintf("%s%s", m.ShortName(), version)
 }
 
 func (m *IdJson) WithDelimiter(delimiter string) string {
