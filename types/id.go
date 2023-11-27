@@ -30,7 +30,8 @@ type IdJson struct {
 	Alias   string `json:"alias,omitempty"`
 }
 
-func (m *IdJson) Colon() string { return m.WithDelimiter(":") }
+// Colon should be used only for log purpose
+func (m *IdJson) Colon() string { return m.withDelimiter(":") }
 func (m *IdJson) OriginVersion() string {
 	var version string
 	if m.Version != "" {
@@ -45,16 +46,13 @@ func (m *IdJson) ShortName() string {
 	return ShortNameFromOrigin(m.Origin)
 }
 
-func (m *IdJson) WithDelimiter(delimiter string) string {
-	var version string
-	if m.Version != "" {
-		version = fmt.Sprintf("%s%s", delimiter, m.Version)
+func (m *IdJson) withDelimiter(delimiter string) string {
+	shortOrigin := ShortNameFromOrigin(delimiter)
+	var extension string
+	if m.Commit != "" {
+		extension = delimiter + m.Commit
 	}
-	var alias string
-	if m.Alias != "" {
-		alias = fmt.Sprintf("%s%s", m.Alias, delimiter)
-	}
-	return fmt.Sprintf("%s%s%s", alias, m.ShortName(), version)
+	return fmt.Sprintf("%s%s", shortOrigin, extension)
 }
 
 func (m *IdJson) Equals(other *IdJson) bool {
