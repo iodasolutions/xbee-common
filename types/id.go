@@ -47,12 +47,11 @@ func (m *IdJson) ShortName() string {
 }
 
 func (m *IdJson) withDelimiter(delimiter string) string {
-	shortOrigin := ShortNameFromOrigin(delimiter)
 	var extension string
 	if m.Commit != "" {
 		extension = delimiter + m.Commit
 	}
-	return fmt.Sprintf("%s%s", shortOrigin, extension)
+	return fmt.Sprintf("%s%s", m.Origin, extension)
 }
 
 func (m *IdJson) Equals(other *IdJson) bool {
