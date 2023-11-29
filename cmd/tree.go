@@ -11,8 +11,6 @@ var realArgs []string
 var isHelp bool
 var Args []string
 
-var AliasOption = "--xbeeAlias"
-var Alias string
 var EnvOption = "-e"
 
 // var HostUser *user2.User
@@ -20,20 +18,8 @@ var Envs []string
 
 func init() {
 	args := os.Args[1:]
-	Alias, args = filterValueOption(AliasOption, args)
 	Envs, args = filterValuesOption(EnvOption, args)
 	Args = args
-}
-
-func filterBoolOption(option string, args []string) (bool, []string) {
-	if len(args) > 0 {
-		if args[0] == option {
-			return true, args[1:]
-		} else {
-			return false, args
-		}
-	}
-	return false, nil
 }
 
 func filterValueOption(option string, args []string) (string, []string) {
