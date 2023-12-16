@@ -91,7 +91,7 @@ func BuildAndDeploy(ctx context.Context, srcMainPath string, execName string) *c
 func buildFor(ctx context.Context, commit string, release string, goos string, goarch string, srcMainPath string, execName string) (newfs.File, *cmd.XbeeError) {
 	fmt.Printf("building %s for arch %s...", goos, goarch)
 	binFile := localBin(goos, goarch, execName)
-	binFile.Dir().EnsureEmpty()
+	binFile.Dir().EnsureExists()
 	ldflagsRelease := ""
 	if release != "" {
 		ldflagsRelease = fmt.Sprintf(" -X 'github.com/iodasolutions/xbee-common/util.GitRelease=%s'", release)
