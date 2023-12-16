@@ -36,9 +36,22 @@ func Build(ctx context.Context, srcMainPath string, execName string) *cmd.XbeeEr
 			return err
 		} else {
 			copyMaybeToLocalBin(targetBin, osArch[0], osArch[1])
+			createArchive(targetBin, osArch[0])
 		}
 	}
 	return nil
+}
+
+func createArchive(binFile newfs.File, osName string) newfs.File {
+	var zFile newfs.File
+	if osName == "windows" {
+		zFile = binFile.DoZip()
+		fmt.Println("zipped OK")
+	} else {
+		zFile = binFile.DoTargGz()
+		fmt.Println("tar.gz OK")
+	}
+	return zFile
 }
 
 func CommitAndRelease(ctx context.Context) (string, string, *cmd.XbeeError) {
@@ -64,15 +77,7 @@ func BuildAndDeploy(ctx context.Context, srcMainPath string, execName string) *c
 			return err
 		} else {
 			copyMaybeToLocalBin(binFile, osArch[0], osArch[1])
-			var zFile newfs.File
-			if osArch[0] == "windows" {
-				zFile = binFile.DoZip()
-				fmt.Println("zipped OK")
-			} else {
-				zFile = binFile.DoTargGz()
-				fmt.Println("tar.gz OK")
-			}
-
+			zFile := createArchive(binFile, osArch[0])
 			fmt.Printf("deploy %s...", osArch[0])
 			u := Unit{
 				Source: zFile,
