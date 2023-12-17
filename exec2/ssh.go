@@ -6,7 +6,6 @@ import (
 	"github.com/iodasolutions/xbee-common/cmd"
 	"github.com/iodasolutions/xbee-common/log2"
 	"github.com/iodasolutions/xbee-common/newfs"
-	"github.com/iodasolutions/xbee-common/util"
 	"golang.org/x/crypto/ssh"
 	"io"
 	"os"
@@ -74,13 +73,11 @@ func (c *SSHClient) RunCommandToOut(command string) (out string, err *cmd.XbeeEr
 		return "", cmd.Error("cannot create session : %v", err2)
 	}
 	defer func() {
-		f := func() *cmd.XbeeError {
-			if err := sess.Close(); err != nil {
-				return cmd.Error("cannot close session: %v", err)
+		if sess != nil {
+			if err3 := sess.Close(); err3 != nil {
+				err = cmd.Error("cannot close session: %v", err3)
 			}
-			return nil
 		}
-		err = util.CloseWithError(f, err)
 	}()
 	w := NewMachineOnlyReadableWriter()
 	we := NewMachineOnlyReadableWriter()
@@ -103,13 +100,11 @@ func (c *SSHClient) run(command string, redirectStd bool) (err *cmd.XbeeError) {
 		return cmd.Error("cannot create session : %v", err2)
 	}
 	defer func() {
-		f := func() *cmd.XbeeError {
-			if err := sess.Close(); err != nil {
-				return cmd.Error("cannot close session: %v", err)
+		if sess != nil {
+			if err3 := sess.Close(); err3 != nil {
+				err = cmd.Error("cannot close session: %v", err3)
 			}
-			return nil
 		}
-		err = util.CloseWithError(f, err)
 	}()
 	if redirectStd {
 		sess.Stdout = os.Stdout
@@ -150,78 +145,74 @@ func (c *SSHClient) runScript(script string, redirectStd bool) (err *cmd.XbeeErr
 	return
 }
 
-func (c *SSHClient) Upload(path newfs.File, todir newfs.Folder) *cmd.XbeeError {
-	if err := c.RunCommandQuiet(fmt.Sprintf("sudo mkdir -p %s", todir)); err != nil {
-		return err
+func (c *SSHClient) Upload(path newfs.File, todir newfs.Folder) (err *cmd.XbeeError) {
+	if err = c.RunCommandQuiet(fmt.Sprintf("sudo mkdir -p %s", todir)); err != nil {
+		return
 	}
-	var session *ssh.Session
-	session, err := c.conn.NewSession()
-	if err != nil {
-		return cmd.Error("cannot create a session for connection %s: %v", c.hostPort, err)
+	sess, err2 := c.conn.NewSession()
+	if err2 != nil {
+		err = cmd.Error("cannot create a session for connection %s: %v", c.hostPort, err)
+		return
 	}
 	defer func() {
-		f := func() *cmd.XbeeError {
-			if err := session.Close(); err != nil {
-				return cmd.Error("cannot close session: %v", err)
+		if sess != nil {
+			if err3 := sess.Close(); err3 != nil {
+				err = cmd.Error("cannot close session: %v", err3)
 			}
-			return nil
 		}
-		err = util.CloseWithError(f, err)
 	}()
 	go func() {
-		w, _ := session.StdinPipe()
+		w, _ := sess.StdinPipe()
 		defer func() {
-			f := func() *cmd.XbeeError {
-				if err := w.Close(); err != nil {
-					return cmd.Error("cannot close session: %v", err)
-				}
-				return nil
+			if err2 := w.Close(); err2 != nil {
+				err = cmd.Error("cannot close writer: %v", err)
 			}
-			err = util.CloseWithError(f, err)
 		}()
 		//		fmt.Fprintln(w, "D0755", 0, "xbee") // mkdir
 		if err = uploadInternScp(string(path), w); err != nil {
-			fmt.Printf("%v\n", err)
 			return
 		}
-		if _, err = fmt.Fprint(w, "\x00"); err != nil {
+		if _, err2 := fmt.Fprint(w, "\x00"); err2 != nil {
 			return
 		} // transfer end with \x00
 
 	}()
 	command := fmt.Sprintf("sudo /usr/bin/scp -tr %s", todir)
-	if err := session.Run(command); err != nil {
+	if err := sess.Run(command); err != nil {
 		return cmd.Error("command [%s] for session [%s] failed: %v", command, c.hostPort, err)
 	}
 	return nil
 }
 
-func uploadInternScp(path string, w io.Writer) (err error) {
-	fileInfo, err := os.Stat(path)
-	if err != nil {
+func uploadInternScp(path string, w io.Writer) (err *cmd.XbeeError) {
+	fileInfo, err2 := os.Stat(path)
+	if err2 != nil {
+		err = cmd.Error("cannot stat %s : %v", path, err2)
 		return
 	}
-	var file *os.File
-	file, err = os.Open(path)
-	if err != nil {
+	file, err3 := os.Open(path)
+	if err3 != nil {
+		err = cmd.Error("cannot open %s : %v", path, err3)
 		return
 	}
 	defer func() {
-		f := func() *cmd.XbeeError {
-			if err := file.Close(); err != nil {
-				return cmd.Error("cannot close f %s: %v", file, err)
+		if file != nil {
+			if err4 := file.Close(); err != nil {
+				err = cmd.Error("cannot close f %s: %v", file, err4)
 			}
-			return nil
 		}
-		err = util.CloseWithError(f, err)
 	}()
 	length := fileInfo.Size()
 	mode := fmt.Sprintf("%#o", fileInfo.Mode())
 	_, name := filepath.Split(path)
-	if _, err = fmt.Fprintln(w, "C"+mode, length, name); err != nil {
+	if _, err5 := fmt.Fprintln(w, "C"+mode, length, name); err != nil {
+		err = cmd.Error("unexpected error : %v", err5)
 		return
 	}
-	_, err = io.Copy(w, file)
+	_, err6 := io.Copy(w, file)
+	if err6 != nil {
+		err = cmd.Error("unexpected error : %v", err6)
+	}
 	return
 }
 
