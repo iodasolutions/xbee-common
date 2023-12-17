@@ -42,8 +42,10 @@ func Connect(host string, port string, user string) (client *SSHClient, err *cmd
 	}
 	if aSession, err4 := conn.NewSession(); err4 == nil {
 		defer func() {
-			if err5 := aSession.Close(); err5 != nil {
-				err = cmd.Error("cannot close session for %s: %v", connexionString, err)
+			if aSession != nil {
+				if err3 := aSession.Close(); err3 != nil && err3 != io.EOF {
+					log2.Warnf("An error occurred when closing session : %v", err3)
+				}
 			}
 		}()
 		client = &SSHClient{
@@ -74,8 +76,8 @@ func (c *SSHClient) RunCommandToOut(command string) (out string, err *cmd.XbeeEr
 	}
 	defer func() {
 		if sess != nil {
-			if err3 := sess.Close(); err3 != nil {
-				err = cmd.Error("cannot close session: %v", err3)
+			if err3 := sess.Close(); err3 != nil && err3 != io.EOF {
+				log2.Warnf("An error occurred when closing session : %v", err3)
 			}
 		}
 	}()
@@ -101,8 +103,8 @@ func (c *SSHClient) run(command string, redirectStd bool) (err *cmd.XbeeError) {
 	}
 	defer func() {
 		if sess != nil {
-			if err3 := sess.Close(); err3 != nil {
-				err = cmd.Error("cannot close session: %v", err3)
+			if err3 := sess.Close(); err3 != nil && err3 != io.EOF {
+				log2.Warnf("An error occurred when closing session : %v", err3)
 			}
 		}
 	}()
@@ -132,7 +134,7 @@ func (c *SSHClient) runScript(script string, redirectStd bool) (err *cmd.XbeeErr
 			if err == nil {
 				err = err2
 			} else {
-				err = cmd.Error("closing session failed: %v. First error was : %v", err2, err)
+				err = cmd.Error("cannot delete tmp file: %v. First error was : %v", err2, err)
 			}
 		}
 	}()
@@ -156,8 +158,8 @@ func (c *SSHClient) Upload(path newfs.File, todir newfs.Folder) (err *cmd.XbeeEr
 	}
 	defer func() {
 		if sess != nil {
-			if err3 := sess.Close(); err3 != nil {
-				err = cmd.Error("cannot close session: %v", err3)
+			if err3 := sess.Close(); err3 != nil && err3 != io.EOF {
+				log2.Warnf("An error occurred when closing session : %v", err3)
 			}
 		}
 	}()
