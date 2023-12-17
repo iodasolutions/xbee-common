@@ -42,14 +42,10 @@ func Connect(host string, port string, user string) (client *SSHClient, err *cmd
 		return
 	}
 	if aSession, err4 := conn.NewSession(); err4 == nil {
-		f := func() *cmd.XbeeError {
-			if err := aSession.Close(); err != nil {
-				return cmd.Error("cannot close session for %s: %v", connexionString, err)
-			}
-			return nil
-		}
 		defer func() {
-			err = util.CloseWithError(f, err)
+			if err5 := aSession.Close(); err5 != nil {
+				err = cmd.Error("cannot close session for %s: %v", connexionString, err)
+			}
 		}()
 		client = &SSHClient{
 			conn:     conn,
