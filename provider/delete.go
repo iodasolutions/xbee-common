@@ -14,7 +14,7 @@ func deleteCommand() *cmd.Command {
 }
 
 func doDelete(_ []string) *cmd.XbeeError {
-	envName := EnvId().ShortName()
+	envName := EnvName()
 	log2.Infof("Delete all instances from environment %s and wait...", envName)
 	err := provider.Delete()
 	if err == nil {

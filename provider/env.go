@@ -3,18 +3,21 @@ package provider
 import (
 	"github.com/iodasolutions/xbee-common/cmd"
 	"github.com/iodasolutions/xbee-common/newfs"
-	"github.com/iodasolutions/xbee-common/types"
 	"github.com/iodasolutions/xbee-common/util"
 	"sync"
 )
 
-func EnvJson() newfs.File {
+func envJson() newfs.File {
 	return newfs.ChildXbee(newfs.CWD()).ChildFileJson("env")
 }
 
+func Save(e *Env) {
+	envJson().Save(e)
+}
+
 type Env struct {
-	Origin  string    `json:"origin,omitempty"`
-	Commit  string    `json:"commit,omitempty"`
+	Id      string    `json:"id"`
+	Name    string    `json:"name"`
 	Hosts   []*Host   `json:"hosts,omitempty"`
 	Volumes []*Volume `json:"volumes,omitempty"`
 	Nets    []*Net    `json:"nets,omitempty"`
@@ -48,7 +51,7 @@ var env struct {
 
 func initEnv() {
 	var err *cmd.XbeeError
-	if env.Env, err = newfs.Unmarshal[*Env](EnvJson()); err != nil {
+	if env.Env, err = newfs.Unmarshal[*Env](envJson()); err != nil {
 		newfs.DoExitOnError(err)
 	}
 }
@@ -73,14 +76,19 @@ func NetsForEnv() (result []*Net) {
 	return env.Env.Nets
 }
 
-func EnvId() *types.IdJson {
+// EnvName should be used for logging purpose.
+func EnvName() string {
 	env.once.Do(func() {
 		initEnv()
 	})
-	return &types.IdJson{
-		Origin: env.Env.Origin,
-		Commit: env.Env.Commit,
-	}
+	return env.Env.Name
+}
+
+func EnvId() string {
+	env.once.Do(func() {
+		initEnv()
+	})
+	return env.Env.Id
 }
 
 func VolumesFromEnvironment(names []string) (result []*Volume) {
