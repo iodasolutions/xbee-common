@@ -30,6 +30,7 @@ type Host struct {
 	Volumes    []string               `json:"volumes,omitempty"`
 	User       string                 `json:"user,omitempty"`
 	ExternalIp string                 `json:"externalip,omitempty"`
+	PackId     string                 `json:"packid,omitempty"`
 }
 
 type Volume struct {
