@@ -8,7 +8,7 @@ import (
 
 func deleteCommand() *cmd.Command {
 	return &cmd.Command{
-		Use: "delete",
+		Use: string(Delete),
 		Run: doDelete,
 	}
 }

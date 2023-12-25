@@ -7,7 +7,7 @@ import (
 
 func instanceInfosCommand() *cmd.Command {
 	return &cmd.Command{
-		Use: "instanceinfos",
+		Use: string(InstanceInfos),
 		Run: doInstanceInfo,
 	}
 }

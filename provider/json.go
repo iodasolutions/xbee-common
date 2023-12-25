@@ -7,7 +7,7 @@ const (
 	Delete         Action = "delete"
 	DestroyVolumes Action = "destroyvolumes"
 	InstanceInfos  Action = "instanceinfos"
-	Pack           Action = "pack"
+	Image          Action = "image"
 )
 
 type DestroyVolumesRequest struct {

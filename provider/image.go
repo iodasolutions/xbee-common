@@ -8,7 +8,7 @@ import (
 
 func imageCommand() *cmd.Command {
 	return &cmd.Command{
-		Use: "image",
+		Use: string(Image),
 		Run: doImage,
 	}
 }

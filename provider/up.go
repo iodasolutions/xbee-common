@@ -14,7 +14,7 @@ func upCommand() *cmd.Command {
 		Options: []*cmd.Option{
 			cmd.NewBooleanOption("local", "", false),
 		},
-		Use: "up",
+		Use: string(Up),
 		Run: doUp,
 	}
 }

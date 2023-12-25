@@ -4,7 +4,7 @@ import "github.com/iodasolutions/xbee-common/cmd"
 
 func destroyVolumesCommand() *cmd.Command {
 	return &cmd.Command{
-		Use: "destroyvolumes",
+		Use: string(DestroyVolumes),
 		Run: doDestroyVolumes,
 	}
 }
