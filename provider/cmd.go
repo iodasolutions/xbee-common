@@ -14,6 +14,7 @@ type Provider interface {
 	Up() (*InitialStatus, *cmd.XbeeError)
 	Delete() *cmd.XbeeError
 	InstanceInfos() (map[string]*InstanceInfo, *cmd.XbeeError)
+	Image() *cmd.XbeeError
 }
 
 type Admin interface {
@@ -42,5 +43,6 @@ func buildCmdTree(root *cmd.Command) *cmd.XbeeError {
 	return root.AddCommands(upCommand(),
 		deleteCommand(),
 		destroyVolumesCommand(),
-		instanceInfosCommand())
+		instanceInfosCommand(),
+		imageCommand())
 }
