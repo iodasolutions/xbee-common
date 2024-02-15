@@ -11,32 +11,36 @@ import (
 
 var script = `#!/bin/bash
 set -e
-apt-get update
-apt-get install -y \
-    ca-certificates \
-    curl \
-    gnupg \
-    lsb-release
-mkdir -m 0755 -p /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-  $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-apt-get update
-apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-usermod -aG docker {{ .user }}
-{{ if .remote }}
-archi=$(uname -m)
-if [ "${archi}" == "x86_64" ];then
-	archi=amd64
-elif [ "${archi}" == "aarch64" ]; then
-   archi=arm64
+if [ ! -f /usr/bin/xbee ]; then
+	apt-get update
+#docker
+	apt-get install -y \
+		ca-certificates \
+		curl \
+		gnupg \
+		lsb-release
+	mkdir -m 0755 -p /etc/apt/keyrings
+	curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+	echo \
+	  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+	  $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+	apt-get update
+	apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+	usermod -aG docker {{ .user }}
+#xbee
+	{{ if .remote }}
+	archi=$(uname -m)
+	if [ "${archi}" == "x86_64" ];then
+		archi=amd64
+	elif [ "${archi}" == "aarch64" ]; then
+	   archi=arm64
+	fi
+	curl -O "https://s3.eu-west-3.amazonaws.com/xbee.repository.public/linux_${archi}/xbee.tar.gz"
+	tar -xzvf xbee.tar.gz -C /usr/bin
+	rm xbee.tar.gz
+	mkdir -p /var/xbee/{pack,systempack}
+	{{ end }}
 fi
-curl -O "https://s3.eu-west-3.amazonaws.com/xbee.repository.public/linux_${archi}/xbee.tar.gz"
-tar -xzvf xbee.tar.gz -C /usr/bin
-rm xbee.tar.gz
-mkdir -p /var/xbee/{pack,systempack}
-{{ end }}
 cat > /etc/hostname <<EOF
 {{ .name }}
 EOF
