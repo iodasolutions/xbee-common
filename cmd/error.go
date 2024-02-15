@@ -25,6 +25,7 @@ func Error(format string, args ...interface{}) *XbeeError {
 	}
 }
 
+// CauseBy should be used in stacked go routines
 func CauseBy(origins ...*XbeeError) *XbeeError {
 	var stack string
 	if IsStackEnabled() {
@@ -40,6 +41,30 @@ func CauseBy(origins ...*XbeeError) *XbeeError {
 	}
 }
 
+// FollowedWith should be used in defer func
+func FollowedWith(follows ...*XbeeError) *XbeeError {
+	var notNils []*XbeeError
+	for _, follow := range follows {
+		if follow != nil {
+			notNils = append(notNils, follow)
+		}
+	}
+	if len(notNils) == 0 {
+		return nil
+	}
+	var stack string
+	if IsStackEnabled() {
+		stack = generateStack()
+		for _, follow := range notNils {
+			follow.SkipLast(5)
+		}
+	}
+	return &XbeeError{
+		stack:              stack,
+		follows:            notNils,
+		skipFirstLineCount: 5,
+	}
+}
 func generateStack() string {
 	stackSlice := make([]byte, 8192)
 	n := runtime.Stack(stackSlice, false)
@@ -54,6 +79,7 @@ type XbeeError struct {
 	skipFirstLineCount int
 	skipLastLineCount  int
 	origins            []*XbeeError
+	follows            []*XbeeError
 }
 
 func (xe *XbeeError) SkipFirst(lineCount int) *XbeeError {
@@ -91,6 +117,14 @@ func (xe *XbeeError) Error() string {
 		buf.WriteString(origin.Error())
 		buf.WriteByte('\n')
 	}
+	if len(xe.follows) > 0 {
+		buf.WriteString("FOLLOWS:\n")
+	}
+	for _, follow := range xe.follows {
+		buf.WriteString(follow.Error())
+		buf.WriteByte('\n')
+	}
+
 	return buf.String()
 }
 
