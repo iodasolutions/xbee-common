@@ -40,6 +40,10 @@ if [ ! -f /usr/bin/xbee ]; then
 	rm xbee.tar.gz
 	mkdir -p {{ .pack }} {{ .system }}
 	{{ end }}
+	cat > /etc/profile.d/xbee.sh <<EOF
+#!/bin/sh
+export XBEE_TYPE=2
+EOF
 fi
 cat > /etc/hostname <<EOF
 {{ .name }}
