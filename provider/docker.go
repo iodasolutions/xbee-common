@@ -38,7 +38,7 @@ if [ ! -f /usr/bin/xbee ]; then
 	curl -O "https://s3.eu-west-3.amazonaws.com/xbee.repository.public/linux_${archi}/xbee.tar.gz"
 	tar -xzvf xbee.tar.gz -C /usr/bin
 	rm xbee.tar.gz
-	mkdir -p /var/xbee/{pack,systempack}
+	mkdir -p {{ .pack }} {{ .system }}
 	{{ end }}
 fi
 cat > /etc/hostname <<EOF
@@ -52,6 +52,8 @@ func dockerScript(info *InstanceInfo) string {
 		"user":   info.User,
 		"remote": !cmd.OptionFrom("local").BooleanValue(),
 		"name":   info.Name,
+		"pack":   VmPack(),
+		"system": VmSystemPack(),
 	}
 	w := &bytes.Buffer{}
 	if err := template.OutputWithTemplate(script, w, model, nil); err != nil {
