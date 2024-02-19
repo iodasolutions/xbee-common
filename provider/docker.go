@@ -11,7 +11,7 @@ import (
 
 var script = `#!/bin/bash
 set -e
-if [ ! -f /usr/bin/xbee ]; then
+if [ ! -f {{ .XbeePath }} ]; then
 	apt-get update
 #docker
 	apt-get install -y \
@@ -38,7 +38,7 @@ if [ ! -f /usr/bin/xbee ]; then
 	curl -O "https://s3.eu-west-3.amazonaws.com/xbee.repository.public/linux_${archi}/xbee.tar.gz"
 	tar -xzvf xbee.tar.gz -C /usr/bin
 	rm xbee.tar.gz
-	mkdir -p /var/xbee/packs
+	mkdir -p {{ .XbeeVar }}/packs
 	{{ end }}
 	cat > /etc/profile.d/xbee.sh <<EOF
 #!/bin/sh
@@ -53,9 +53,11 @@ hostname {{ .name }}
 
 func dockerScript(info *InstanceInfo) string {
 	model := map[string]interface{}{
-		"user":   info.User,
-		"remote": !cmd.OptionFrom("local").BooleanValue(),
-		"name":   info.Name,
+		"user":     info.User,
+		"remote":   !cmd.OptionFrom("local").BooleanValue(),
+		"name":     info.Name,
+		"XbeePath": XbeePath(),
+		"XbeeVar":  XbeeVar,
 	}
 	w := &bytes.Buffer{}
 	if err := template.OutputWithTemplate(script, w, model, nil); err != nil {
