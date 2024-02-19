@@ -38,7 +38,7 @@ if [ ! -f /usr/bin/xbee ]; then
 	curl -O "https://s3.eu-west-3.amazonaws.com/xbee.repository.public/linux_${archi}/xbee.tar.gz"
 	tar -xzvf xbee.tar.gz -C /usr/bin
 	rm xbee.tar.gz
-	mkdir -p /var/xbee
+	mkdir -p /var/xbee/packs
 	{{ end }}
 	cat > /etc/profile.d/xbee.sh <<EOF
 #!/bin/sh
