@@ -3,6 +3,7 @@ package provider
 import (
 	"github.com/iodasolutions/xbee-common/cmd"
 	"github.com/iodasolutions/xbee-common/newfs"
+	"github.com/iodasolutions/xbee-common/types"
 	"github.com/iodasolutions/xbee-common/util"
 	"sync"
 )
@@ -30,8 +31,10 @@ type Host struct {
 	Volumes    []string               `json:"volumes,omitempty"`
 	User       string                 `json:"user,omitempty"`
 	ExternalIp string                 `json:"externalip,omitempty"`
-	SystemId   string                 `json:"systemid,omitempty"`
-	PackId     string                 `json:"packid,omitempty"`
+	SystemId   *types.IdJson          `json:"systemid,omitempty"`
+	SystemHash string                 `json:"systemhash,omitempty"`
+	PackId     *types.IdJson          `json:"packid,omitempty"`
+	PackHash   string                 `json:"packhash,omitempty"`
 }
 
 type Volume struct {
