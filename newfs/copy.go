@@ -85,7 +85,7 @@ func CopyDir(src string, dst string) *cmd.XbeeError {
 
 	si, err := os.Stat(src)
 	if err != nil {
-		return cmd.Error("cannot modify properties of %s: %v", err)
+		return cmd.Error("cannot modify properties of %s: %v", src, err)
 	} else {
 		if !si.IsDir() {
 			return cmd.Error("source is not a directory")

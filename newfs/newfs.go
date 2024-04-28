@@ -46,7 +46,7 @@ func moveDirectory(srcDir string, destDir string) *cmd.XbeeError {
 	// Parcours les fichiers du répertoire source
 	files, err := dir.Readdir(-1)
 	if err != nil {
-		return cmd.Error("cannot read directory %s: %v", dir, err)
+		return cmd.Error("cannot read directory %s: %v", srcDir, err)
 	}
 	for _, file := range files {
 		// Construit le chemin absolu pour le fichier source

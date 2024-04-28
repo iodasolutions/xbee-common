@@ -78,7 +78,7 @@ func (fd Folder) DeleteDirContent() *cmd.XbeeError {
 	}
 	dir, err := os.Open(fd.String())
 	if err != nil {
-		return cmd.Error("cannot open %s : %v", dir, err)
+		return cmd.Error("cannot open %s : %v", fd, err)
 	}
 	defer dir.Close()
 	names, err := dir.Readdirnames(-1)
@@ -374,10 +374,10 @@ func (fd Folder) TarToFile(f File) *cmd.XbeeError {
 		if err != nil {
 			return err
 		}
-		return addFileToTar(tw, path, info)
+		return addFileToTar(tw, fd.String(), path, info)
 	})
 	if err != nil {
-		return cmd.Error("unexpected error when packaging folder %s as tar file %s: %v", fd, tarfile, err)
+		return cmd.Error("unexpected error when packaging folder %s as tar file %s: %v", fd, f, err)
 	}
 	return nil
 }
@@ -389,7 +389,7 @@ func (fd Folder) TarToFolder(target Folder) *cmd.XbeeError {
 }
 
 // Fonction pour ajouter un fichier/dossier à l'archive tar
-func addFileToTar(tw *tar.Writer, path string, info os.FileInfo) error {
+func addFileToTar(tw *tar.Writer, basePath, path string, info os.FileInfo) error {
 	// Ouvrir le fichier à ajouter à l'archive
 	file, err := os.Open(path)
 	if err != nil {
@@ -402,20 +402,56 @@ func addFileToTar(tw *tar.Writer, path string, info os.FileInfo) error {
 	if err != nil {
 		return err
 	}
-	header.Name = path
 
-	// Écrire l'en-tête dans l'archive
-	if err := tw.WriteHeader(header); err != nil {
+	// Ajuster le champ Name pour utiliser un chemin relatif
+	relPath, err := filepath.Rel(basePath, path)
+	if err != nil {
 		return err
 	}
+	if relPath != "." {
+		header.Name = "./" + relPath
+	} else {
+		return nil
+	}
 
-	// Si ce n'est pas un dossier, écrire le contenu du fichier dans l'archive
-	if !info.IsDir() {
+	if info.Mode().IsRegular() {
+		// Ouvrir le fichier régulier à ajouter à l'archive
+		file, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+
+		// Écrire l'en-tête dans l'archive
+		if err := tw.WriteHeader(header); err != nil {
+			return err
+		}
+
+		// Écrire le contenu du fichier dans l'archive
 		_, err = io.Copy(tw, file)
 		if err != nil {
 			return err
 		}
+	} else if (info.Mode() & os.ModeSymlink) != 0 {
+		// Récupérer le chemin cible du lien symbolique
+		target, err := os.Readlink(path)
+		if err != nil {
+			return err
+		}
+		header.Linkname = target
+		header.Typeflag = tar.TypeSymlink
+
+		// Écrire l'en-tête du lien symbolique dans l'archive
+		if err := tw.WriteHeader(header); err != nil {
+			return err
+		}
+	} else {
+		// Gérer les autres types de fichiers (comme les dossiers) en écrivant seulement l'en-tête
+		if err := tw.WriteHeader(header); err != nil {
+			return err
+		}
 	}
+
 	return nil
 }
 
