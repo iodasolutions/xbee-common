@@ -2,6 +2,7 @@ package newfs
 
 import (
 	"bytes"
+	"compress/gzip"
 	"crypto/sha1"
 	"encoding/hex"
 	"encoding/json"
@@ -85,13 +86,13 @@ func (f File) Save(outs ...interface{}) {
 func (f File) Dir() Folder {
 	return Folder(filepath.Dir(f.String()))
 }
-func (f File) OpenFileForCreation() *os.File {
+func (f File) OpenFileForCreation() (*os.File, *cmd.XbeeError) {
 	f.Dir().Create()
 	fd, err := os.Create(string(f))
 	if err != nil {
-		panic(fmt.Errorf("cannot create file %s : %v", f, err))
+		return nil, cmd.Error("cannot create file %s : %v", f, err)
 	}
-	return fd
+	return fd, nil
 }
 
 func (f File) EnsureDelete() *cmd.XbeeError {
@@ -202,7 +203,10 @@ func (f File) CanBeFiltered() bool {
 }
 
 func (f File) FillWithTemplate(templateS string, data interface{}, funcMap map[string]interface{}) *cmd.XbeeError {
-	fp := f.OpenFileForCreation()
+	fp, err := f.OpenFileForCreation()
+	if err != nil {
+		return err
+	}
 	defer fp.Close()
 	if err := template.OutputWithTemplate(templateS, fp, data, funcMap); err != nil {
 		return cmd.Error("cannot parse [%s] with variables [%s]: %v", templateS, data, err)
@@ -210,13 +214,17 @@ func (f File) FillWithTemplate(templateS string, data interface{}, funcMap map[s
 	return nil
 }
 
-func (f File) SetContentBytes(content []byte) {
-	w := f.OpenFileForCreation()
+func (f File) SetContentBytes(content []byte) *cmd.XbeeError {
+	w, err := f.OpenFileForCreation()
+	if err != nil {
+		return err
+	}
 	buf := bytes.NewBuffer(content)
 	if _, err := io.Copy(w, buf); err != nil {
-		panic(err)
+		return cmd.Error("cannot copy content to %s : %v", f, err)
 	}
 	defer w.Close()
+	return nil
 }
 func (f File) SetContent(content string) {
 	f.SetContentBytes([]byte(content))
@@ -237,14 +245,91 @@ func (f File) EnsureExists() {
 		f.Create()
 	}
 }
-func (f File) DoTargGz() File {
+func (f File) DoTargGz() (File, *cmd.XbeeError) {
 	tarGz := f.Dir().ChildFile(fmt.Sprintf("%s.tar.gz", f.Base()))
-	tarGz.EnsureDelete()
+	if err := tarGz.EnsureDelete(); err != nil {
+		return "", err
+	}
 	if err := archiver.Archive([]string{f.String()}, tarGz.String()); err != nil {
 		panic(fmt.Errorf("cannot compress file %s : %v\n", f, err))
 	}
-	return tarGz
+	reader, err := os.Open(f.String())
+	if err != nil {
+		return "", cmd.Error("cannot open file %s : %v", f.String(), err)
+	}
+	defer reader.Close()
+	writer, err := tarGz.OpenFileForCreation()
+	if err != nil {
+		return "", cmd.Error("cannot create file %s : %v", tarGz.String(), err)
+	}
+	defer writer.Close()
+	// Créer un writer gzip avec la compression par défaut
+	gzWriter := gzip.NewWriter(writer)
+	defer gzWriter.Close()
+
+	// Copier le contenu du fichier tar dans le writer gzip
+	_, err = io.Copy(gzWriter, reader)
+	if err != nil {
+		return "", cmd.Error("cannot add content to file %s : %v", tarGz.String(), err)
+	}
+	return tarGz, nil
 }
+
+/*
+package main
+
+import (
+
+	"compress/gzip"
+	"io"
+	"os"
+
+)
+
+	func main() {
+		// Nom du fichier tar existant et du nouveau fichier gzip à créer
+		tarFile := "example.tar"
+		gzFile := "example.tar.gz"
+
+		// Ouvrir le fichier tar en lecture
+		reader, err := os.Open(tarFile)
+		if err != nil {
+			panic(err)
+		}
+		defer reader.Close()
+
+		// Créer le fichier gzip en écriture
+		writer, err := os.Create(gzFile)
+		if err != nil {
+			panic(err)
+		}
+		defer writer.Close()
+
+		// Créer un writer gzip avec la compression par défaut
+		gzWriter := gzip.NewWriter(writer)
+		defer gzWriter.Close()
+
+		// Copier le contenu du fichier tar dans le writer gzip
+		_, err = io.Copy(gzWriter, reader)
+		if err != nil {
+			panic(err)
+		}
+
+		// Assurez-vous que toutes les données soient bien écrites dans le fichier final
+		err = gzWriter.Close()
+		if err != nil {
+			panic(err)
+		}
+
+		// Fermeture du fichier tar original (facultatif, car defer s'en charge)
+		err = reader.Close()
+		if err != nil {
+			panic(err)
+		}
+
+		// Le fichier example.tar.gz est maintenant créé et contient les données compressées
+	}
+*/
 func (f File) DoZip() File {
 	zipFile := f.Dir().ChildFile(fmt.Sprintf("%s.zip", f.Base()))
 	zipFile.EnsureDelete()

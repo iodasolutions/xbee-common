@@ -10,6 +10,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"github.com/iodasolutions/xbee-common/cmd"
 	"github.com/iodasolutions/xbee-common/log2"
 	"github.com/iodasolutions/xbee-common/util"
 	"golang.org/x/crypto/ssh"
@@ -89,7 +90,7 @@ func (rg *RsaGenerator) EnsureRootKeysExist(ctx context.Context) {
 		rg.createAndPersistRootCertificate()
 	}
 }
-func (rg *RsaGenerator) createAndPersistRootCertificate() {
+func (rg *RsaGenerator) createAndPersistRootCertificate() *cmd.XbeeError {
 	rg.sshFolder.EnsureEmpty()
 	rg.sshFolder.ChMod(0700)
 	ca, caPrivKey := util.NewRootCA()
@@ -100,7 +101,10 @@ func (rg *RsaGenerator) createAndPersistRootCertificate() {
 	}
 
 	// ca
-	caPEM := rg.CAFile().OpenFileForCreation()
+	caPEM, err2 := rg.CAFile().OpenFileForCreation()
+	if err2 != nil {
+		return err2
+	}
 	defer caPEM.Close()
 	if err := pem.Encode(caPEM, &pem.Block{
 		Type:  "CERTIFICATE",
@@ -111,7 +115,10 @@ func (rg *RsaGenerator) createAndPersistRootCertificate() {
 	rg.CAFile().ChMod(0644)
 
 	// key
-	caPrivKeyPEM := rg.RootKeyPEM().OpenFileForCreation()
+	caPrivKeyPEM, err3 := rg.RootKeyPEM().OpenFileForCreation()
+	if err3 != nil {
+		return err3
+	}
 	defer caPrivKeyPEM.Close()
 	if err := pem.Encode(caPrivKeyPEM, &pem.Block{
 		Type:  "RSA PRIVATE KEY",
@@ -125,14 +132,17 @@ func (rg *RsaGenerator) createAndPersistRootCertificate() {
 	if err != nil {
 		panic(fmt.Errorf("\nCannot return public key from private key : %v\n", err))
 	}
-	publicKeyWriter := rg.RootAuthorizedKey().OpenFileForCreation()
+	publicKeyWriter, err4 := rg.RootAuthorizedKey().OpenFileForCreation()
+	if err4 != nil {
+		return err4
+	}
 	defer publicKeyWriter.Close()
 	buf := bytes.NewBuffer(ssh.MarshalAuthorizedKey(pub))
 	if _, err := io.Copy(publicKeyWriter, buf); err != nil {
 		panic(err)
 	}
 	rg.RootAuthorizedKey().ChMod(0644)
-
+	return nil
 }
 
 func (rg *RsaGenerator) NewServerCertificate() (certPEM []byte, privateKeyPEM []byte) {

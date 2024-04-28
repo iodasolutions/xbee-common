@@ -362,7 +362,10 @@ func (fd Folder) MoveTo(dir Folder) *cmd.XbeeError {
 }
 
 func (fd Folder) TarToFile(f File) *cmd.XbeeError {
-	tarfile := f.OpenFileForCreation()
+	tarfile, err := f.OpenFileForCreation()
+	if err != nil {
+		return err
+	}
 	defer tarfile.Close()
 
 	// Créer un writer tar
@@ -370,14 +373,14 @@ func (fd Folder) TarToFile(f File) *cmd.XbeeError {
 	defer tw.Close()
 
 	// Parcourir tous les fichiers et dossiers du répertoire source
-	err := filepath.Walk(fd.String(), func(path string, info os.FileInfo, err error) error {
+	err2 := filepath.Walk(fd.String(), func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 		return addFileToTar(tw, fd.String(), path, info)
 	})
-	if err != nil {
-		return cmd.Error("unexpected error when packaging folder %s as tar file %s: %v", fd, f, err)
+	if err2 != nil {
+		return cmd.Error("unexpected error when packaging folder %s as tar file %s: %v", fd, f, err2)
 	}
 	return nil
 }
