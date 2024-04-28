@@ -29,5 +29,6 @@ require (
 	github.com/aws/smithy-go v1.15.0 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
+	github.com/ulikunitz/xz v0.5.12 // indirect
 	golang.org/x/sys v0.19.0 // indirect
 )

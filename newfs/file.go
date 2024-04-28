@@ -3,6 +3,7 @@ package newfs
 import (
 	"archive/zip"
 	"bytes"
+	"compress/bzip2"
 	"compress/gzip"
 	"crypto/sha1"
 	"encoding/hex"
@@ -10,6 +11,7 @@ import (
 	"fmt"
 	"github.com/iodasolutions/xbee-common/cmd"
 	"github.com/iodasolutions/xbee-common/template"
+	"github.com/ulikunitz/xz"
 	"io"
 	"io/ioutil"
 	"os"
@@ -283,6 +285,68 @@ func (f File) Compress(extension string) (File, *cmd.XbeeError) {
 	defer closer.Close()
 	// Copier le contenu du fichier tar dans le writer gzip
 	_, err = io.Copy(compress_writer, reader)
+	if err != nil {
+		return "", cmd.Error("cannot add content to file %s : %v", target.String(), err)
+	}
+	return target, nil
+}
+
+func (f File) Extract() (File, *cmd.XbeeError) {
+	sourceReader, err := os.Open(f.String())
+	if err != nil {
+		return "", cmd.Error("cannot open file %s : %v", f.String(), err)
+	}
+	defer sourceReader.Close()
+
+	var reader io.Reader
+	var closer io.Closer
+
+	extension := f.Extension()
+	switch extension {
+	case "gz":
+		// Créer un lecteur gzip
+		gr, err := gzip.NewReader(sourceReader)
+		if err != nil {
+			return "", cmd.Error("cannot create gzip reader for %s : %v", f.String(), err)
+		}
+		reader = gr
+		closer = gr
+	case "zip":
+		r, err := zip.OpenReader(f.String())
+		if err != nil {
+			return "", cmd.Error("cannot open reader for %s : %v", f.String(), err)
+		}
+		contentFile, err := r.File[0].Open()
+		if err != nil {
+			return "", cmd.Error("cannot open reader for %s : %v", f.String(), err)
+		}
+		reader = contentFile
+		closer = contentFile
+	case "bzip2":
+		reader = bzip2.NewReader(sourceReader)
+	case "xz":
+		// Créer un lecteur gzip
+		reader, err = xz.NewReader(sourceReader)
+		if err != nil {
+			return "", cmd.Error("cannot open reader for %s : %v", f.String(), err)
+		}
+	default:
+		return "", cmd.Error("unknown compression support only gz, zip, xz or bzip2 are supported, actual is [%s]", extension)
+	}
+	if closer != nil {
+		defer closer.Close()
+	}
+
+	// Créer le fichier de destination
+	target := f.Dir().ChildFile(f.BaseWithoutExtension())
+	writer, err := os.Create(target.String())
+	if err != nil {
+		return "", cmd.Error("cannot create file %s : %v", target.String(), err)
+	}
+	defer writer.Close()
+
+	// Copier le contenu décompressé dans le fichier de destination
+	_, err = io.Copy(writer, reader)
 	if err != nil {
 		return "", cmd.Error("cannot add content to file %s : %v", target.String(), err)
 	}
