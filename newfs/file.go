@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"github.com/iodasolutions/xbee-common/cmd"
 	"github.com/iodasolutions/xbee-common/template"
-	"github.com/mholt/archiver/v3"
 	"io"
 	"io/ioutil"
 	"os"
@@ -246,71 +245,46 @@ func (f File) EnsureExists() {
 		f.Create()
 	}
 }
-func (f File) DoTargGz() (File, *cmd.XbeeError) {
-	tarGz := f.Dir().ChildFile(fmt.Sprintf("%s.tar.gz", f.Base()))
-	if err := tarGz.EnsureDelete(); err != nil {
-		return "", err
+
+func (f File) Compress(extension string) (File, *cmd.XbeeError) {
+	if extension != "gz" && extension != "zip" {
+		return "", cmd.Error("compression support only gz or zip, actual is [%s]", extension)
 	}
 	reader, err := os.Open(f.String())
 	if err != nil {
 		return "", cmd.Error("cannot open file %s : %v", f.String(), err)
 	}
 	defer reader.Close()
-	writer, err := tarGz.OpenFileForCreation()
+	target := File(f.String() + "." + extension)
+	targetWriter, err := target.OpenFileForCreation()
 	if err != nil {
-		return "", cmd.Error("cannot create file %s : %v", tarGz.String(), err)
+		return "", cmd.Error("cannot create file %s : %v", target.String(), err)
 	}
-	defer writer.Close()
-	// Créer un writer gzip avec la compression par défaut
-	gzWriter := gzip.NewWriter(writer)
-	defer gzWriter.Close()
+	defer targetWriter.Close()
 
+	var compress_writer io.Writer
+	var closer io.Closer
+	switch extension {
+	case "gz":
+		zw := gzip.NewWriter(targetWriter)
+		compress_writer = zw
+		closer = zw
+	default: //zip
+		// Créer un writer gzip avec la compression par défaut
+		zipWriter := zip.NewWriter(targetWriter)
+		// Créer une entrée zip pour le fichier
+		zipEntry, err := zipWriter.Create(f.Base())
+		if err != nil {
+			return "", cmd.Error("cannot create zip entry %s : %v", f.Base(), err)
+		}
+		compress_writer = zipEntry
+		closer = zipWriter
+	}
+	defer closer.Close()
 	// Copier le contenu du fichier tar dans le writer gzip
-	_, err = io.Copy(gzWriter, reader)
+	_, err = io.Copy(compress_writer, reader)
 	if err != nil {
-		return "", cmd.Error("cannot add content to file %s : %v", tarGz.String(), err)
+		return "", cmd.Error("cannot add content to file %s : %v", target.String(), err)
 	}
-	return tarGz, nil
-}
-
-func (f File) DoZip() (File, *cmd.XbeeError) {
-	zipFile := f.Dir().ChildFile(fmt.Sprintf("%s.zip", f.Base()))
-	if err := zipFile.EnsureDelete(); err != nil {
-		return "", err
-	}
-	reader, err := os.Open(f.String())
-	if err != nil {
-		return "", cmd.Error("cannot open file %s : %v", f.String(), err)
-	}
-	defer reader.Close()
-	writer, err := zipFile.OpenFileForCreation()
-	if err != nil {
-		return "", cmd.Error("cannot create file %s : %v", zipFile.String(), err)
-	}
-	defer writer.Close()
-	// Créer un writer gzip avec la compression par défaut
-	zipWriter := zip.NewWriter(writer)
-	defer zipWriter.Close()
-
-	// Créer une entrée zip pour le fichier
-	zipEntry, err := zipWriter.Create(f.Base())
-	if err != nil {
-		panic(err)
-	}
-	_, err = io.Copy(zipEntry, reader)
-	if err != nil {
-		return "", cmd.Error("cannot add content to file %s : %v", zipFile.String(), err)
-	}
-	return zipFile, nil
-}
-
-func (f File) ExtractTo(outputDir Folder) *cmd.XbeeError {
-	if err := archiver.Unarchive(string(f), outputDir.String()); err != nil {
-		return cmd.Error("cannot extract %s to %s: %v", f, outputDir, err)
-	}
-	return nil
-}
-
-func (f File) Untar() *cmd.XbeeError {
-	return f.ExtractTo(f.Dir())
+	return target, nil
 }

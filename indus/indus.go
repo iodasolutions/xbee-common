@@ -44,14 +44,14 @@ func Build(ctx context.Context, srcMainPath string, execName string) *cmd.XbeeEr
 
 func createArchive(binFile newfs.File, osName string) (newfs.File, *cmd.XbeeError) {
 	if osName == "windows" {
-		zFile, err := binFile.DoZip()
+		zFile, err := binFile.Compress("zip")
 		if err != nil {
 			return "", err
 		}
 		fmt.Println("zipped OK")
 		return zFile, nil
 	} else {
-		zFile, err := binFile.DoTargGz()
+		zFile, err := binFile.Compress("gz")
 		if err != nil {
 			return "", err
 		}

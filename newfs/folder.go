@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/iodasolutions/xbee-common/cmd"
 	"github.com/iodasolutions/xbee-common/stringutils"
-	"github.com/mholt/archiver/v3"
 	"io"
 	"io/ioutil"
 	"log"
@@ -458,16 +457,25 @@ func addFileToTar(tw *tar.Writer, basePath, path string, info os.FileInfo) error
 	return nil
 }
 
-func (fd Folder) TarGz() (File, *cmd.XbeeError) {
-	dir := tmpDir.RandomChildFolder().Create()
-	finalFile := dir.ChildFile(fd.Base() + ".tar.gz")
-	var sources []string
-	for _, child := range fd.Children() {
-		sources = append(sources, child.String())
+// CompressToDir supports gz, zip
+func (fd Folder) CompressToDir(target Folder, extension string, keepTar bool) (File, *cmd.XbeeError) {
+	target.EnsureExists()
+	return fd.CompressToPath(target.ChildFile(fd.Base()+"."+extension), keepTar)
+}
+
+func (fd Folder) CompressToPath(target File, keepTar bool) (File, *cmd.XbeeError) {
+	targetTar := target.Dir().ChildFile(target.BaseWithoutExtension() + ".tar")
+	if err := fd.TarToFile(targetTar); err != nil {
+		return "", err
 	}
-	err := archiver.Archive(sources, finalFile.String())
+	result, err := targetTar.Compress(target.Extension())
 	if err != nil {
-		return "", cmd.Error("cannot make compressed tar %s from folder %s", finalFile, fd)
+		return "", err
 	}
-	return finalFile, nil
+	if !keepTar {
+		if err := targetTar.EnsureDelete(); err != nil {
+			return "", err
+		}
+	}
+	return result, nil
 }
