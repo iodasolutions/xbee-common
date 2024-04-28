@@ -1,10 +1,12 @@
 package newfs
 
 import (
+	"archive/tar"
 	"fmt"
 	"github.com/iodasolutions/xbee-common/cmd"
 	"github.com/iodasolutions/xbee-common/stringutils"
 	"github.com/mholt/archiver/v3"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -358,17 +360,63 @@ func (fd Folder) RandomFile() File {
 func (fd Folder) MoveTo(dir Folder) *cmd.XbeeError {
 	return moveDirectory(string(fd), string(dir))
 }
-func (fd Folder) TarTo(dir Folder, name string) (File, *cmd.XbeeError) {
-	finalFile := dir.ChildFile(name + ".tar")
-	var sources []string
-	for _, child := range fd.Children() {
-		sources = append(sources, child.String())
-	}
-	err := archiver.Archive(sources, finalFile.String())
+
+func (fd Folder) TarToFile(f File) *cmd.XbeeError {
+	tarfile := f.OpenFileForCreation()
+	defer tarfile.Close()
+
+	// Créer un writer tar
+	tw := tar.NewWriter(tarfile)
+	defer tw.Close()
+
+	// Parcourir tous les fichiers et dossiers du répertoire source
+	err := filepath.Walk(fd.String(), func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		return addFileToTar(tw, path, info)
+	})
 	if err != nil {
-		return "", cmd.Error("cannot archive folder %s to %s: %v", dir, finalFile, err)
+		return cmd.Error("unexpected error when packaging folder %s as tar file %s: %v", fd, tarfile, err)
 	}
-	return finalFile, nil
+	return nil
+}
+
+func (fd Folder) TarToFolder(target Folder) *cmd.XbeeError {
+	target.EnsureExists()
+	targetTar := target.ChildFile(fd.Base() + ".tar")
+	return fd.TarToFile(targetTar)
+}
+
+// Fonction pour ajouter un fichier/dossier à l'archive tar
+func addFileToTar(tw *tar.Writer, path string, info os.FileInfo) error {
+	// Ouvrir le fichier à ajouter à l'archive
+	file, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// Créer l'en-tête tar pour le fichier
+	header, err := tar.FileInfoHeader(info, "")
+	if err != nil {
+		return err
+	}
+	header.Name = path
+
+	// Écrire l'en-tête dans l'archive
+	if err := tw.WriteHeader(header); err != nil {
+		return err
+	}
+
+	// Si ce n'est pas un dossier, écrire le contenu du fichier dans l'archive
+	if !info.IsDir() {
+		_, err = io.Copy(tw, file)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (fd Folder) TarGz() (File, *cmd.XbeeError) {
