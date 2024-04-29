@@ -35,9 +35,9 @@ if [ ! -f {{ .XbeePath }} ]; then
 	elif [ "${archi}" == "aarch64" ]; then
 	   archi=arm64
 	fi
-	curl -O "https://s3.eu-west-3.amazonaws.com/xbee.repository.public/linux_${archi}/xbee.tar.gz"
-	tar -xzvf xbee.tar.gz -C /usr/bin
-	rm xbee.tar.gz
+	curl -O "https://s3.eu-west-3.amazonaws.com/xbee.repository.public/linux_${archi}/xbee.gz"
+	tar -xzvf xbee.gz -C /usr/bin
+	rm xbee.gz
 	mkdir -p {{ .XbeeVar }}/packs
 	{{ end }}
 	cat > /etc/profile.d/xbee.sh <<EOF

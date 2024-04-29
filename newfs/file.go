@@ -1,6 +1,7 @@
 package newfs
 
 import (
+	"archive/tar"
 	"archive/zip"
 	"bytes"
 	"compress/bzip2"
@@ -258,9 +259,9 @@ func (f File) Compress(extension string) (File, *cmd.XbeeError) {
 	}
 	defer reader.Close()
 	target := File(f.String() + "." + extension)
-	targetWriter, err := target.OpenFileForCreation()
-	if err != nil {
-		return "", cmd.Error("cannot create file %s : %v", target.String(), err)
+	targetWriter, err2 := target.OpenFileForCreation()
+	if err2 != nil {
+		return "", cmd.Error("cannot create file %s : %v", target.String(), err2)
 	}
 	defer targetWriter.Close()
 
@@ -290,8 +291,12 @@ func (f File) Compress(extension string) (File, *cmd.XbeeError) {
 	}
 	return target, nil
 }
-
-func (f File) Extract() (File, *cmd.XbeeError) {
+func (f File) ExtractTo(fd Folder) (File, *cmd.XbeeError) {
+	fd.EnsureExists()
+	target := fd.ChildFile(f.BaseWithoutExtension())
+	return f.ExtractToFile(target)
+}
+func (f File) ExtractToFile(target File) (File, *cmd.XbeeError) {
 	sourceReader, err := os.Open(f.String())
 	if err != nil {
 		return "", cmd.Error("cannot open file %s : %v", f.String(), err)
@@ -338,7 +343,7 @@ func (f File) Extract() (File, *cmd.XbeeError) {
 	}
 
 	// Créer le fichier de destination
-	target := f.Dir().ChildFile(f.BaseWithoutExtension())
+
 	writer, err := os.Create(target.String())
 	if err != nil {
 		return "", cmd.Error("cannot create file %s : %v", target.String(), err)
@@ -351,4 +356,63 @@ func (f File) Extract() (File, *cmd.XbeeError) {
 		return "", cmd.Error("cannot add content to file %s : %v", target.String(), err)
 	}
 	return target, nil
+}
+func (f File) Extract() (File, *cmd.XbeeError) {
+	target := f.Dir().ChildFile(f.BaseWithoutExtension())
+	return f.ExtractToFile(target)
+}
+
+func (f File) UntarTo(targetFd Folder) *cmd.XbeeError {
+	file, err := os.Open(f.String())
+	if err != nil {
+		return cmd.Error("cannot open file %s : %v", f.String(), err)
+	}
+	defer file.Close()
+
+	tr := tar.NewReader(file)
+	for {
+		header, err := tr.Next()
+
+		switch {
+		case err == io.EOF:
+			return nil
+		case err != nil:
+			return cmd.Error("unexpected error in tar reader : %v", err)
+		case header == nil:
+			continue
+		}
+
+		target := filepath.Join(targetFd.String(), header.Name)
+
+		// Gérer le cas des liens symboliques
+		switch header.Typeflag {
+		case tar.TypeDir:
+			if err := os.MkdirAll(target, os.FileMode(header.Mode)); err != nil {
+				return cmd.Error("cannot create directory %s : %v", target, err)
+			}
+		case tar.TypeReg:
+			outFile, err := os.OpenFile(target, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, os.FileMode(header.Mode))
+			if err != nil {
+				return cmd.Error("cannot open file %s : %v", target, err)
+			}
+			if _, err := io.Copy(outFile, tr); err != nil {
+				outFile.Close()
+				return cmd.Error("cannot copy file %s : %v", target, err)
+			}
+			outFile.Close()
+		case tar.TypeSymlink:
+			if err := os.Symlink(header.Linkname, target); err != nil {
+				return cmd.Error("cannot create symlink %s : %v", target, err)
+			}
+		case tar.TypeLink:
+			// Hard link
+			linkTarget := filepath.Join(target, header.Linkname)
+			if err := os.Link(linkTarget, target); err != nil {
+				return cmd.Error("cannot create hardlink %s : %v", target, err)
+			}
+		}
+	}
+}
+func (f File) Untar() *cmd.XbeeError {
+	return f.UntarTo(f.Dir())
 }

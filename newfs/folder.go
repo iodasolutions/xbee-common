@@ -457,6 +457,10 @@ func addFileToTar(tw *tar.Writer, basePath, path string, info os.FileInfo) error
 	return nil
 }
 
+func (fd Folder) Compress(extension string, keepTar bool) (File, *cmd.XbeeError) {
+	return fd.CompressToDir(fd.Dir(), extension, keepTar)
+}
+
 // CompressToDir supports gz, zip
 func (fd Folder) CompressToDir(target Folder, extension string, keepTar bool) (File, *cmd.XbeeError) {
 	target.EnsureExists()

@@ -14,6 +14,8 @@ import (
 
 const publicBucket = "xbee.repository.public"
 
+var PrivateBucket = "xbee.repository"
+
 var osArchs = [][]string{
 	{
 		"windows", "amd64",
@@ -55,7 +57,7 @@ func createArchive(binFile newfs.File, osName string) (newfs.File, *cmd.XbeeErro
 		if err != nil {
 			return "", err
 		}
-		fmt.Println("tar.gz OK")
+		fmt.Println("gz OK")
 		return zFile, nil
 	}
 }
@@ -78,6 +80,10 @@ func BuildAndDeploy(ctx context.Context, srcMainPath string, execName string) *c
 	if err != nil {
 		return err
 	}
+	svc, err2 := AdminClient(publicBucket)
+	if err2 != nil {
+		return err2
+	}
 	for _, osArch := range osArchs {
 		if binFile, err := buildFor(ctx, commit, release, osArch[0], osArch[1], srcMainPath, execName); err != nil {
 			return err
@@ -88,15 +94,10 @@ func BuildAndDeploy(ctx context.Context, srcMainPath string, execName string) *c
 				return err
 			}
 			fmt.Printf("deploy %s...", osArch[0])
-			u := Unit{
-				Source: zFile,
-				Bucket: publicBucket,
-				Key:    fmt.Sprintf("%s_%s", osArch[0], osArch[1]),
+			theKey := fmt.Sprintf("%s_%s", osArch[0], osArch[1])
+			if err3 := svc.Upload(ctx, zFile, theKey); err3 != nil {
+				return err3
 			}
-			if err := u.UploadToS3(ctx); err != nil {
-				return err
-			}
-
 		}
 	}
 	return nil
@@ -110,8 +111,10 @@ func buildFor(ctx context.Context, commit string, release string, goos string, g
 	if release != "" {
 		ldflagsRelease = fmt.Sprintf(" -X 'github.com/iodasolutions/xbee-common/util.GitRelease=%s'", release)
 	}
+	//go build -ldflags "-X 'main.maVariable=$(echo $ENV_VAR)'"
 	formattedTime := time.Now().Format("2006-01-02 15:04:05")
 	ldflags := fmt.Sprintf("-X 'github.com/iodasolutions/xbee-common/util.BuildTime=%s' -X 'github.com/iodasolutions/xbee-common/util.GitCommit=%s'%s", formattedTime, commit, ldflagsRelease)
+	ldflags += fmt.Sprintf(" -X 'github.com/iodasolutions/xbee-common/indus.n1=%s' -X 'github.com/iodasolutions/xbee-common/indus.s1=%s'", os.Getenv("XBEE_ACCESS_ID"), os.Getenv("XBEE_ACCESS_SECRET"))
 	aCmd := exec.CommandContext(ctx, "go", "build", "-ldflags", ldflags, "-gcflags", "all=-N -l", "-o", binFile.String(), fmt.Sprintf("%s/%s", newfs.CWD(), srcMainPath))
 	aCmd.Env = environmentFor(goos, goarch)
 	aCmd.Stderr = os.Stderr
