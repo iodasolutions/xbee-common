@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"os"
+	"strings"
 )
 
 // root MUST be initialized through Setup func
@@ -9,34 +10,31 @@ var root Command
 var leaf *Command
 var realArgs []string
 var isHelp bool
+
+// Args without xbee flags
 var Args []string
-
-var EnvOption = "-e"
-
-// var HostUser *user2.User
-var Envs []string
+var XbeeFlags []string
 
 func init() {
 	args := os.Args[1:]
-	Envs, args = filterValuesOption(EnvOption, args)
-	Args = args
+	XbeeFlags, Args = filterValuesOption(args)
 }
 
-func filterValueOption(option string, args []string) (string, []string) {
+func filterValueOption(args []string) (string, []string) {
 	if len(args) > 0 {
-		if args[0] == option {
-			return args[1], args[2:]
+		if strings.HasPrefix(args[0], "--xbee") {
+			return args[0], args[1:]
 		} else {
 			return "", args
 		}
 	}
 	return "", nil
 }
-func filterValuesOption(option string, args []string) ([]string, []string) {
+func filterValuesOption(args []string) ([]string, []string) {
 	var result []string
 	var value string
 	for {
-		value, args = filterValueOption(option, args)
+		value, args = filterValueOption(args)
 		if value != "" {
 			result = append(result, value)
 		} else {
