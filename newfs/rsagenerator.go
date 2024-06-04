@@ -33,7 +33,7 @@ type RsaGenerator struct {
 
 func NewRsaGen(folder Folder) *RsaGenerator {
 	if folder == "" {
-		folder = XbeeIntern().SSHFolder()
+		folder = SSHFolder()
 	}
 	return &RsaGenerator{
 		sshFolder: folder,

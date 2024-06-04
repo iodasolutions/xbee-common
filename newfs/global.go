@@ -1,49 +1,32 @@
 package newfs
 
-var xbeeGlobal Folder
-
-func init() {
-	xbeeGlobal = ChildXbee(Home)
-}
+import (
+	"github.com/iodasolutions/xbee-common/cmd"
+	"github.com/iodasolutions/xbee-common/util"
+)
 
 func ChildXbee(parent Folder) Folder { return parent.ChildFolder(".xbee") }
 
-type XbeeGlobal interface {
-	SSHFolder() Folder
-	CachedFileForUrl(rawUrl string) File
-	CacheArtefacts() Folder
-	VolumesFolder() Folder
+func xbeeIntern() Folder {
+	if util.Contains(cmd.XbeeFlags, "--xbeeContainer") {
+		return ChildXbee("/xbee")
+	}
+	return ChildXbee(Home)
 }
 
-func XbeeIntern() XbeeGlobal {
-	return globalXbeeFolder{}
-}
-
-type globalXbeeFolder struct {
-}
-
-func (gxf globalXbeeFolder) SSHFolder() Folder { return xbeeGlobal.ChildFolder(".ssh") }
-func (gxf globalXbeeFolder) CachedFileForUrl(rawUrl string) File {
-	fd, name := gxf.CacheArtefacts().SubFolderForLocation(rawUrl)
+func SSHFolder() Folder { return xbeeIntern().ChildFolder(".ssh") }
+func CachedFileForUrl(rawUrl string) File {
+	fd, name := CacheArtefacts().SubFolderForLocation(rawUrl)
 	return fd.ChildFile(name)
 }
-func (gxf globalXbeeFolder) CacheArtefacts() Folder { return xbeeGlobal.ChildFolder("cache-artefacts") }
-func (gxf globalXbeeFolder) VolumesFolder() Folder  { return xbeeGlobal.ChildFolder("volumes") }
-
-//func GlobalXbeeFolder() globalXbeeFolder {
-//	internalDir := fromConf("internaldir").GetString()
-//	if internalDir != "" {
-//		return globalXbeeFolder{Folder: Folder(internalDir)}
-//	}
-//	return globalXbeeFolder{Folder: Home}
-//}
-
-func (gxf globalXbeeFolder) CacheElements() Folder   { return xbeeGlobal.ChildFolder("cache-elements") }
-func (gxf globalXbeeFolder) CacheExports() Folder    { return xbeeGlobal.ChildFolder("cache-exports") }
-func (gxf globalXbeeFolder) EnvsFolder() Folder      { return xbeeGlobal.ChildFolder("envs") }
-func (gxf globalXbeeFolder) LogsFolder() Folder      { return xbeeGlobal.ChildFolder("logs") }
-func (gxf globalXbeeFolder) ContainerFolder() Folder { return xbeeGlobal.ChildFolder("container") }
-func (gxf globalXbeeFolder) Rsa() *RsaGenerator      { return NewRsaGen(gxf.SSHFolder()) }
-func (gxf globalXbeeFolder) ProviderFolder(provider string) Folder {
-	return gxf.EnvsFolder().ChildFolder(provider)
+func CacheArtefacts() Folder  { return xbeeIntern().ChildFolder("cache-artefacts") }
+func VolumesFolder() Folder   { return xbeeIntern().ChildFolder("volumes") }
+func CacheElements() Folder   { return xbeeIntern().ChildFolder("cache-elements") }
+func CacheExports() Folder    { return xbeeIntern().ChildFolder("cache-exports") }
+func EnvsFolder() Folder      { return xbeeIntern().ChildFolder("envs") }
+func LogsFolder() Folder      { return xbeeIntern().ChildFolder("logs") }
+func ContainerFolder() Folder { return xbeeIntern().ChildFolder("container") }
+func Rsa() *RsaGenerator      { return NewRsaGen(SSHFolder()) }
+func ProviderFolder(provider string) Folder {
+	return EnvsFolder().ChildFolder(provider)
 }

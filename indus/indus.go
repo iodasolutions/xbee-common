@@ -143,5 +143,5 @@ func environmentFor(goos string, goarch string) []string {
 	return env
 }
 func localDir(bucket string, goos string, goarch string) newfs.Folder {
-	return newfs.XbeeIntern().CacheArtefacts().ChildFolder(fmt.Sprintf("s3.eu-west-3.amazonaws.com/%s/%s_%s", bucket, goos, goarch))
+	return newfs.CacheArtefacts().ChildFolder(fmt.Sprintf("s3.eu-west-3.amazonaws.com/%s/%s_%s", bucket, goos, goarch))
 }
