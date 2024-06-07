@@ -94,7 +94,7 @@ func BuildAndDeploy(ctx context.Context, srcMainPath string, execName string) *c
 				return err
 			}
 			fmt.Printf("deploy %s...", osArch[0])
-			theKey := fmt.Sprintf("%s_%s", osArch[0], osArch[1])
+			theKey := fmt.Sprintf("%s_%s/%s", osArch[0], osArch[1], zFile.Base())
 			if err3 := svc.Upload(ctx, zFile, theKey); err3 != nil {
 				return err3
 			}
