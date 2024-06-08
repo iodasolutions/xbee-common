@@ -37,7 +37,6 @@ if [ ! -f {{ .XbeePath }} ]; then
 	fi
 	curl -O "https://s3.eu-west-3.amazonaws.com/xbee.repository.public/linux_${archi}/xbee.gz"
 	gunzip xbee.gz && mv ./xbee /usr/bin && chmod +x /usr/bin/xbee
-	rm xbee.gz
 	mkdir -p /xbee/packs
 	{{ end }}
 	
