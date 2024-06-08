@@ -36,7 +36,7 @@ if [ ! -f {{ .XbeePath }} ]; then
 	   archi=arm64
 	fi
 	curl -O "https://s3.eu-west-3.amazonaws.com/xbee.repository.public/linux_${archi}/xbee.gz"
-	tar -xzvf xbee.gz -C /usr/bin
+	gunzip xbee.gz && mv xbee /user/bin && chmod +x /usr/bin/xbee
 	rm xbee.gz
 	mkdir -p /xbee/packs
 	{{ end }}
