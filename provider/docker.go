@@ -38,12 +38,9 @@ if [ ! -f {{ .XbeePath }} ]; then
 	curl -O "https://s3.eu-west-3.amazonaws.com/xbee.repository.public/linux_${archi}/xbee.gz"
 	tar -xzvf xbee.gz -C /usr/bin
 	rm xbee.gz
-	mkdir -p {{ .XbeeVar }}/packs
+	mkdir -p /xbee/packs
 	{{ end }}
-	cat > /etc/profile.d/xbee.sh <<EOF
-#!/bin/sh
-export XBEE_TYPE=2
-EOF
+	
 fi
 cat > /etc/hostname <<EOF
 {{ .name }}
@@ -57,7 +54,6 @@ func dockerScript(info *InstanceInfo) string {
 		"remote":   !cmd.OptionFrom("local").BooleanValue(),
 		"name":     info.Name,
 		"XbeePath": XbeePath(),
-		"XbeeVar":  XbeeVar,
 	}
 	w := &bytes.Buffer{}
 	if err := template.OutputWithTemplate(script, w, model, nil); err != nil {
