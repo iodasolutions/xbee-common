@@ -1,12 +1,9 @@
 package provider
 
 import (
-	"context"
 	"fmt"
 	"github.com/iodasolutions/xbee-common/cmd"
-	"github.com/iodasolutions/xbee-common/exec2"
 	"github.com/iodasolutions/xbee-common/log2"
-	"sync"
 )
 
 func upCommand() *cmd.Command {
@@ -27,48 +24,48 @@ func doUp(_ []string) *cmd.XbeeError {
 		return err
 	}
 	log2.Infof("Check SSH for each instance RUNNING")
-	up := r.AllUp()
-	var wg sync.WaitGroup
-	wg.Add(len(up))
-	ctx := context.Background()
-	for _, info := range up {
-		go func(info *InstanceInfo) {
-			defer wg.Done()
-			ok := exec2.CheckSSH(ctx, info.ExternalIp, info.SSHPort, info.User)
-			if !ok {
-				log2.Errorf("instance %s is not reachable", info.Name)
-			} else {
-				log2.Infof("SSH for instance %s OK", info.Name)
-			}
-		}(info)
-	}
-	wg.Wait()
+	//up := r.AllUp()
+	//var wg sync.WaitGroup
+	//wg.Add(len(up))
+	//ctx := context.Background()
+	//for _, info := range up {
+	//	go func(info *InstanceInfo) {
+	//		defer wg.Done()
+	//		ok := exec2.CheckSSH(ctx, info.ExternalIp, info.SSHPort, info.User)
+	//		if !ok {
+	//			log2.Errorf("instance %s is not reachable", info.Name)
+	//		} else {
+	//			log2.Infof("SSH for instance %s OK", info.Name)
+	//		}
+	//	}(info)
+	//}
+	//wg.Wait()
+	//
+	//var wg2 sync.WaitGroup
+	//wg2.Add(len(up))
+	//ctx = context.Background()
+	//if len(r.NotExisting) > 0 {
+	//	InstallDockerAndXbee(ctx, r.NotExisting)
+	//}
+	//if len(r.NotExisting) > 0 || len(r.Down) > 0 {
+	//	script := toEtcHosts(up)
+	//	for _, info := range up {
+	//		go func(info *InstanceInfo) {
+	//			defer wg2.Done()
+	//			client, err := info.Connect()
+	//			if err != nil {
+	//				log2.Errorf("instance %s is not reachable via SSH", info.Name)
+	//			}
+	//			if err := client.RunScriptQuiet(script); err != nil {
+	//				log2.Errorf("Failed to update /etc/hosts on host %s", info.Name)
+	//			}
+	//		}(info)
+	//	}
+	//	wg2.Wait()
+	//	log2.Infof("updated DNS for all instances created")
+	//}
 
-	var wg2 sync.WaitGroup
-	wg2.Add(len(up))
-	ctx = context.Background()
-	if len(r.NotExisting) > 0 {
-		InstallDockerAndXbee(ctx, r.NotExisting)
-	}
-	if len(r.NotExisting) > 0 || len(r.Down) > 0 {
-		script := toEtcHosts(up)
-		for _, info := range up {
-			go func(info *InstanceInfo) {
-				defer wg2.Done()
-				client, err := info.Connect()
-				if err != nil {
-					log2.Errorf("instance %s is not reachable via SSH", info.Name)
-				}
-				if err := client.RunScriptQuiet(script); err != nil {
-					log2.Errorf("Failed to update /etc/hosts on host %s", info.Name)
-				}
-			}(info)
-		}
-		wg2.Wait()
-		log2.Infof("updated DNS for all instances created")
-	}
-
-	upStatusFile().Save(r)
+	instanceInfosFile().Save(r)
 
 	if err == nil {
 		log2.Infof(fmt.Sprintf("Environment %s is now up", envName))

@@ -11,7 +11,7 @@ var provider Provider
 var admin Admin
 
 type Provider interface {
-	Up() (*InitialStatus, *cmd.XbeeError)
+	Up() ([]*InstanceInfo, *cmd.XbeeError)
 	Delete() *cmd.XbeeError
 	InstanceInfos() ([]*InstanceInfo, *cmd.XbeeError)
 	Image() *cmd.XbeeError
