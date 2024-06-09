@@ -6,7 +6,6 @@ import (
 	"github.com/iodasolutions/xbee-common/cmd"
 	"github.com/iodasolutions/xbee-common/exec2"
 	"github.com/iodasolutions/xbee-common/newfs"
-	"github.com/iodasolutions/xbee-common/util"
 	"os"
 	"os/exec"
 )
@@ -45,9 +44,7 @@ func (info InstanceInfo) Enter(ctx context.Context, user string) *cmd.XbeeError 
 	return nil
 }
 
-type InstanceInfoForEnv map[string]*InstanceInfo
-
-func InstanceInfosFromProvider() (instanceInfos InstanceInfoForEnv, err *cmd.XbeeError) {
+func InstanceInfosFromProvider() (instanceInfos []*InstanceInfo, err *cmd.XbeeError) {
 	f := instanceInfosFile()
 	if !f.Exists() {
 		panic(cmd.Error("file %s MUST exist", f))
@@ -56,25 +53,6 @@ func InstanceInfosFromProvider() (instanceInfos InstanceInfoForEnv, err *cmd.Xbe
 		err2 := f.EnsureDelete()
 		err = cmd.FollowedWith(err, err2)
 	}()
-	instanceInfos, err = newfs.Unmarshal[map[string]*InstanceInfo](f)
+	instanceInfos, err = newfs.Unmarshal[[]*InstanceInfo](f)
 	return
-}
-
-func (m InstanceInfoForEnv) FilterByState(states ...string) InstanceInfoForEnv {
-	result := map[string]*InstanceInfo{}
-	for k, v := range m {
-		if util.Contains(states, v.State) {
-			result[k] = v
-		}
-	}
-	return result
-}
-func (m InstanceInfoForEnv) FilterByHost(hosts ...string) InstanceInfoForEnv {
-	result := map[string]*InstanceInfo{}
-	for k, v := range m {
-		if util.Contains(hosts, v.Name) {
-			result[k] = v
-		}
-	}
-	return result
 }
