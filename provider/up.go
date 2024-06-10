@@ -25,21 +25,6 @@ func doUp(_ []string) *cmd.XbeeError {
 	}
 	log2.Infof("Check SSH for each instance RUNNING")
 	//up := r.AllUp()
-	//var wg sync.WaitGroup
-	//wg.Add(len(up))
-	//ctx := context.Background()
-	//for _, info := range up {
-	//	go func(info *InstanceInfo) {
-	//		defer wg.Done()
-	//		ok := exec2.CheckSSH(ctx, info.ExternalIp, info.SSHPort, info.User)
-	//		if !ok {
-	//			log2.Errorf("instance %s is not reachable", info.Name)
-	//		} else {
-	//			log2.Infof("SSH for instance %s OK", info.Name)
-	//		}
-	//	}(info)
-	//}
-	//wg.Wait()
 	//
 	//var wg2 sync.WaitGroup
 	//wg2.Add(len(up))
@@ -65,7 +50,8 @@ func doUp(_ []string) *cmd.XbeeError {
 	//	log2.Infof("updated DNS for all instances created")
 	//}
 
-	instanceInfosFile().Save(r)
+	infos := InstanceInfos(r)
+	infos.Save()
 
 	if err == nil {
 		log2.Infof(fmt.Sprintf("Environment %s is now up", envName))

@@ -6,7 +6,7 @@ const (
 	Up             Action = "up"
 	Delete         Action = "delete"
 	DestroyVolumes Action = "destroyvolumes"
-	InstanceInfos  Action = "instanceinfos"
+	Infos          Action = "instanceinfos"
 	Image          Action = "image"
 )
 

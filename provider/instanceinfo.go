@@ -43,16 +43,3 @@ func (info InstanceInfo) Enter(ctx context.Context, user string) *cmd.XbeeError 
 	}
 	return nil
 }
-
-func InstanceInfosFromProvider() (instanceInfos []*InstanceInfo, err *cmd.XbeeError) {
-	f := instanceInfosFile()
-	if !f.Exists() {
-		panic(cmd.Error("file %s MUST exist", f))
-	}
-	defer func() {
-		err2 := f.EnsureDelete()
-		err = cmd.FollowedWith(err, err2)
-	}()
-	instanceInfos, err = newfs.Unmarshal[[]*InstanceInfo](f)
-	return
-}
