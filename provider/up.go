@@ -23,7 +23,7 @@ func doUp(_ []string) *cmd.XbeeError {
 	if err != nil {
 		return err
 	}
-	log2.Infof("Check SSH for each instance RUNNING")
+
 	//up := r.AllUp()
 	//
 	//var wg2 sync.WaitGroup
