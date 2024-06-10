@@ -49,6 +49,13 @@ func (i InstanceInfos) FilterByStates(states ...string) (result InstanceInfos) {
 	return
 }
 
+func (i InstanceInfos) ToMap() map[string]*InstanceInfo {
+	result := make(map[string]*InstanceInfo)
+	for _, info := range i {
+		result[info.Name] = info
+	}
+	return result
+}
 func InstanceInfosFromProvider() (instanceInfos InstanceInfos, err *cmd.XbeeError) {
 	f := instanceInfosFile()
 	if !f.Exists() {
