@@ -31,7 +31,7 @@ type InstanceInfos []*InstanceInfo
 func (i InstanceInfos) Save() {
 	instanceInfosFile().Save(i)
 }
-func (i InstanceInfos) filterByHosts(names ...string) (result InstanceInfos) {
+func (i InstanceInfos) FilterByHosts(names ...string) (result InstanceInfos) {
 	for _, info := range i {
 		if util.Contains(names, info.Name) {
 			result = append(result, info)
@@ -40,7 +40,7 @@ func (i InstanceInfos) filterByHosts(names ...string) (result InstanceInfos) {
 	return
 }
 
-func (i InstanceInfos) filterByStates(states ...string) (result InstanceInfos) {
+func (i InstanceInfos) FilterByStates(states ...string) (result InstanceInfos) {
 	for _, info := range i {
 		if util.Contains(states, info.State) {
 			result = append(result, info)
