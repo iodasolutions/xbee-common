@@ -49,6 +49,15 @@ func (i InstanceInfos) FilterByStates(states ...string) (result InstanceInfos) {
 	return
 }
 
+func (i InstanceInfos) FilterByInitialStates(states ...string) (result InstanceInfos) {
+	for _, info := range i {
+		if util.Contains(states, info.InitialState) {
+			result = append(result, info)
+		}
+	}
+	return
+}
+
 func (i InstanceInfos) ToMap() map[string]*InstanceInfo {
 	result := make(map[string]*InstanceInfo)
 	for _, info := range i {
