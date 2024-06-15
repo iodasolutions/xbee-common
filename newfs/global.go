@@ -1,16 +1,8 @@
 package newfs
 
-import (
-	"github.com/iodasolutions/xbee-common/cmd"
-	"github.com/iodasolutions/xbee-common/util"
-)
-
 func ChildXbee(parent Folder) Folder { return parent.ChildFolder(".xbee") }
 
 func xbeeIntern() Folder {
-	if util.Contains(cmd.XbeeFlags, "--xbeeContainer") {
-		return ChildXbee("/xbee")
-	}
 	return ChildXbee(Home)
 }
 
