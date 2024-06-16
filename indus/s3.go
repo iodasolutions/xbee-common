@@ -33,6 +33,10 @@ func AdminClient(bucket string) (*S3, *cmd.XbeeError) {
 }
 
 func ReadClient() *S3 {
+	if n1 == "" || s1 == "" {
+		n1 = os.Getenv("XBEE_ACCESS_ID")
+		s1 = os.Getenv("XBEE_ACCESS_SECRET")
+	}
 	cfg := aws.Config{
 		Region:      "eu-west-3",
 		Credentials: credentials.NewStaticCredentialsProvider(n1, s1, ""),
