@@ -11,14 +11,6 @@ const (
 	jsonExt = ".json"
 )
 
-func NewTestFolder() Folder {
-	f := tmpDir.RandomChildFolder().Create()
-	if err := os.Chdir(f.String()); err != nil {
-		panic(err)
-	}
-	return f
-}
-
 // by chatGTP
 func moveDirectory(srcDir string, destDir string) *cmd.XbeeError {
 	// Vérifie si le répertoire source existe

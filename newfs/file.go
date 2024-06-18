@@ -74,7 +74,6 @@ func (f File) Extension() string {
 
 func (f File) Save(outs ...interface{}) {
 	buf := &bytes.Buffer{}
-
 	enc := json.NewEncoder(buf)
 	enc.SetEscapeHTML(false)
 	enc.SetIndent("", "    ")

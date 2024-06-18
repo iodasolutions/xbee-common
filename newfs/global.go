@@ -20,3 +20,4 @@ func Rsa() *RsaGenerator     { return NewRsaGen(SSHFolder()) }
 func ProviderFolder(provider string) Folder {
 	return EnvsFolder().ChildFolder(provider)
 }
+func TmpDir() Folder { return xbeeIntern().ChildFolder("tmp") }
