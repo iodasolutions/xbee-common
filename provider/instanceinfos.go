@@ -13,10 +13,6 @@ func instanceInfosCommand() *cmd.Command {
 	}
 }
 
-func instanceInfosFile() newfs.File {
-	return newfs.ChildXbee(newfs.CWD()).ChildFileJson("InstanceInfos")
-}
-
 func doInstanceInfo(_ []string) *cmd.XbeeError {
 	value, err := provider.InstanceInfos()
 	if err == nil {
@@ -29,7 +25,7 @@ func doInstanceInfo(_ []string) *cmd.XbeeError {
 type InstanceInfos []*InstanceInfo
 
 func (i InstanceInfos) Save() {
-	instanceInfosFile().Save(i)
+	newfs.ChildXbee(newfs.CWD()).ChildFileJson("InstanceInfos").Save(i)
 }
 func (i InstanceInfos) FilterByHosts(names ...string) (result InstanceInfos) {
 	for _, info := range i {
@@ -66,9 +62,14 @@ func (i InstanceInfos) ToMap() map[string]*InstanceInfo {
 	return result
 }
 func InstanceInfosFromProvider() (instanceInfos InstanceInfos, err *cmd.XbeeError) {
-	f := instanceInfosFile()
+	return InstanceInfosFromProviderFor(newfs.CWD())
+}
+
+func InstanceInfosFromProviderFor(fd newfs.Folder) (instanceInfos InstanceInfos, err *cmd.XbeeError) {
+	f := newfs.ChildXbee(fd).ChildFileJson("InstanceInfos")
 	if !f.Exists() {
-		panic(cmd.Error("file %s MUST exist", f))
+		err = cmd.Error("file %s MUST exist", f)
+		return
 	}
 	defer func() {
 		err2 := f.EnsureDelete()
