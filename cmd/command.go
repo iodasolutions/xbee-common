@@ -29,6 +29,16 @@ func (c *Command) WithRun(f func([]string) *XbeeError) *Command {
 	c.Run = f
 	return c
 }
+
+func (c *Command) notHidden() map[string]*Command {
+	result := map[string]*Command{}
+	for k, v := range c.commands {
+		if !v.Hidden {
+			result[k] = v
+		}
+	}
+	return result
+}
 func (c *Command) HasOptions() bool {
 	return len(c.Options) > 0
 }
@@ -65,7 +75,7 @@ func (c *Command) AvailableSubCommandsToDisplay() (string, *XbeeError) {
 		return "", Error("unexpected internal error when trying to parse template that list sub commands : %v", err)
 	}
 	sb := new(bytes.Buffer)
-	err = t.Execute(sb, c.commands)
+	err = t.Execute(sb, c.notHidden())
 	if err != nil {
 		return "", Error("unexpected internal error when trying to render the list of sub commands : %v", err)
 	}
