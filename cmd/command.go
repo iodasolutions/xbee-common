@@ -113,8 +113,8 @@ func (c *Command) Path() (result string) {
 	return
 }
 
-func (c *Command) SubCommandNames() (result []string) {
-	for _, childC := range c.commands {
+func (c *Command) subCommandNames() (result []string) {
+	for _, childC := range c.notHidden() {
 		result = append(result, childC.Use)
 	}
 	return

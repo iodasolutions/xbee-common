@@ -87,7 +87,7 @@ func findRunnable(c *Command, args []string) (*Command, []string, *XbeeError) {
 		return c, realArgs, nil
 	}
 	if len(args) == 0 {
-		return nil, nil, Error("Command %s needs a subcommand among %v\n", c.Use, c.SubCommandNames())
+		return nil, nil, Error("Command %s needs a subcommand among %v\n", c.Use, c.subCommandNames())
 	}
 	name := args[0]
 	var childFound *Command
