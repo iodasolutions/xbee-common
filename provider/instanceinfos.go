@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"fmt"
 	"github.com/iodasolutions/xbee-common/cmd"
 	"github.com/iodasolutions/xbee-common/newfs"
 	"github.com/iodasolutions/xbee-common/util"
@@ -77,4 +78,26 @@ func InstanceInfosFromProviderFor(fd newfs.Folder) (instanceInfos InstanceInfos,
 	}()
 	instanceInfos, err = newfs.Unmarshal[InstanceInfos](f)
 	return
+}
+
+func (i InstanceInfos) toEtcHosts() string {
+	var s = `#!/usr/bin/env bash
+cat <<EOF | sudo tee /etc/hosts
+127.0.0.1 localhost
+
+# The following lines are desirable for IPv6 capable hosts
+::1 ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+ff02::3 ip6-allhosts
+`
+	for _, v := range i {
+		if v.Ip != "" {
+			s = s + fmt.Sprintf("%s %s\n", v.Ip, v.Name)
+		}
+	}
+	s = s + "EOF\n"
+	return s
 }
