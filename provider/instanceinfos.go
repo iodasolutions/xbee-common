@@ -80,7 +80,7 @@ func InstanceInfosFromProviderFor(fd newfs.Folder) (instanceInfos InstanceInfos,
 	return
 }
 
-func (i InstanceInfos) toEtcHosts() string {
+func (i InstanceInfos) ToEtcHosts() string {
 	var s = `#!/usr/bin/env bash
 cat <<EOF | sudo tee /etc/hosts
 127.0.0.1 localhost
