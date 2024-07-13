@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/iodasolutions/xbee-common/cmd"
 	"github.com/iodasolutions/xbee-common/newfs"
-	"github.com/iodasolutions/xbee-common/util"
 )
 
 func instanceInfosCommand() *cmd.Command {
@@ -27,14 +26,6 @@ type InstanceInfos []*InstanceInfo
 
 func (i InstanceInfos) Save() {
 	newfs.ChildXbee(newfs.CWD()).ChildFileJson("InstanceInfos").Save(i)
-}
-func (i InstanceInfos) FilterByHosts(names ...string) (result InstanceInfos) {
-	for _, info := range i {
-		if util.Contains(names, info.Name) {
-			result = append(result, info)
-		}
-	}
-	return
 }
 
 func (i InstanceInfos) ToMap() map[string]*InstanceInfo {
