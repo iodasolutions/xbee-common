@@ -18,7 +18,7 @@ type InstanceInfo struct {
 	SystemIdExist bool   `json:"systemidexist,omitempty"`
 }
 
-func (info *InstanceInfo) hostnameScript() string {
+func (info *InstanceInfo) HostnameScript() string {
 	model := map[string]interface{}{
 		"name": info.Name,
 	}
