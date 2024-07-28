@@ -59,6 +59,7 @@ func (c *Command) AddCommand(child *Command) (bool, *XbeeError) {
 	}
 	return false, nil
 }
+
 func (c *Command) AddCommands(cmds ...*Command) *XbeeError {
 	for _, aCmd := range cmds {
 		if _, err := c.AddCommand(aCmd); err != nil {

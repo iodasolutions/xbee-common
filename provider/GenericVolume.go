@@ -5,7 +5,7 @@ type GenericVolume struct {
 	Size int
 }
 
-func FromVolume(req *Volume) GenericVolume {
+func FromVolume(req *XbeeVolume) GenericVolume {
 	return GenericVolume{
 		Name: req.Name,
 		Size: req.Size,

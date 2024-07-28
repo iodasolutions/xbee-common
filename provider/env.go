@@ -17,14 +17,14 @@ func Save(e *Env) {
 }
 
 type Env struct {
-	Id      string    `json:"id"`
-	Name    string    `json:"name"`
-	Hosts   []*Host   `json:"hosts,omitempty"`
-	Volumes []*Volume `json:"volumes,omitempty"`
-	Nets    []*Net    `json:"nets,omitempty"`
+	Id      string        `json:"id"`
+	Name    string        `json:"name"`
+	Hosts   []*XbeeHost   `json:"hosts,omitempty"`
+	Volumes []*XbeeVolume `json:"volumes,omitempty"`
+	Nets    []*XbeeNet    `json:"nets,omitempty"`
 }
 
-type Host struct {
+type XbeeHost struct {
 	Name       string                 `json:"name,omitempty"`
 	Provider   map[string]interface{} `json:"provider,omitempty"`
 	Ports      []string               `json:"ports,omitempty"`
@@ -37,13 +37,13 @@ type Host struct {
 	PackHash   string                 `json:"packhash,omitempty"`
 }
 
-type Volume struct {
+type XbeeVolume struct {
 	Name     string                 `json:"name,omitempty"`
 	Provider map[string]interface{} `json:"provider,omitempty"`
 	Size     int                    `json:"size,omitempty"`
 }
 
-type Net struct {
+type XbeeNet struct {
 	Name     string                 `json:"name,omitempty"`
 	Provider map[string]interface{} `json:"provider,omitempty"`
 	Cidr     string                 `json:"cidr,omitempty"`
@@ -61,20 +61,20 @@ func initEnv() {
 	}
 }
 
-func Hosts() (result []*Host) {
+func Hosts() (result []*XbeeHost) {
 	env.once.Do(func() {
 		initEnv()
 	})
 	return env.Env.Hosts
 }
 
-func VolumesForEnv() (result []*Volume) {
+func VolumesForEnv() (result []*XbeeVolume) {
 	env.once.Do(func() {
 		initEnv()
 	})
 	return env.Env.Volumes
 }
-func NetsForEnv() (result []*Net) {
+func NetsForEnv() (result []*XbeeNet) {
 	env.once.Do(func() {
 		initEnv()
 	})
@@ -96,7 +96,7 @@ func EnvId() string {
 	return env.Env.Id
 }
 
-func VolumesFromEnvironment(names []string) (result []*Volume) {
+func VolumesFromEnvironment(names []string) (result []*XbeeVolume) {
 	for _, v := range VolumesForEnv() {
 		if util.Contains(names, v.Name) {
 			result = append(result, v)
