@@ -8,6 +8,11 @@ import (
 	"sync"
 )
 
+type XbeeElement[T any] struct {
+	Provider map[string]interface{} `json:"provider,omitempty"`
+	Element  T                      `json:"element,omitempty"`
+}
+
 func envJson() newfs.File {
 	return newfs.ChildXbee(newfs.CWD()).ChildFileJson("env")
 }
@@ -17,36 +22,33 @@ func Save(e *Env) {
 }
 
 type Env struct {
-	Id      string        `json:"id"`
-	Name    string        `json:"name"`
-	Hosts   []*XbeeHost   `json:"hosts,omitempty"`
-	Volumes []*XbeeVolume `json:"volumes,omitempty"`
-	Nets    []*XbeeNet    `json:"nets,omitempty"`
+	Id      string                    `json:"id"`
+	Name    string                    `json:"name"`
+	Hosts   []XbeeElement[XbeeHost]   `json:"hosts,omitempty"`
+	Volumes []XbeeElement[XbeeVolume] `json:"volumes,omitempty"`
+	Nets    []XbeeElement[XbeeNet]    `json:"nets,omitempty"`
 }
 
 type XbeeHost struct {
-	Name       string                 `json:"name,omitempty"`
-	Provider   map[string]interface{} `json:"provider,omitempty"`
-	Ports      []string               `json:"ports,omitempty"`
-	Volumes    []string               `json:"volumes,omitempty"`
-	User       string                 `json:"user,omitempty"`
-	ExternalIp string                 `json:"externalip,omitempty"`
-	SystemId   *types.IdJson          `json:"systemid,omitempty"`
-	SystemHash string                 `json:"systemhash,omitempty"`
-	PackId     *types.IdJson          `json:"packid,omitempty"`
-	PackHash   string                 `json:"packhash,omitempty"`
+	Name       string        `json:"name,omitempty"`
+	Ports      []string      `json:"ports,omitempty"`
+	Volumes    []string      `json:"volumes,omitempty"`
+	User       string        `json:"user,omitempty"`
+	ExternalIp string        `json:"externalip,omitempty"`
+	SystemId   *types.IdJson `json:"systemid,omitempty"`
+	SystemHash string        `json:"systemhash,omitempty"`
+	PackId     *types.IdJson `json:"packid,omitempty"`
+	PackHash   string        `json:"packhash,omitempty"`
 }
 
 type XbeeVolume struct {
-	Name     string                 `json:"name,omitempty"`
-	Provider map[string]interface{} `json:"provider,omitempty"`
-	Size     int                    `json:"size,omitempty"`
+	Name string `json:"name,omitempty"`
+	Size int    `json:"size,omitempty"`
 }
 
 type XbeeNet struct {
-	Name     string                 `json:"name,omitempty"`
-	Provider map[string]interface{} `json:"provider,omitempty"`
-	Cidr     string                 `json:"cidr,omitempty"`
+	Name string `json:"name,omitempty"`
+	Cidr string `json:"cidr,omitempty"`
 }
 
 var env struct {
@@ -61,20 +63,20 @@ func initEnv() {
 	}
 }
 
-func Hosts() (result []*XbeeHost) {
+func Hosts() (result []XbeeElement[XbeeHost]) {
 	env.once.Do(func() {
 		initEnv()
 	})
 	return env.Env.Hosts
 }
 
-func VolumesForEnv() (result []*XbeeVolume) {
+func VolumesForEnv() (result []XbeeElement[XbeeVolume]) {
 	env.once.Do(func() {
 		initEnv()
 	})
 	return env.Env.Volumes
 }
-func NetsForEnv() (result []*XbeeNet) {
+func NetsForEnv() (result []XbeeElement[XbeeNet]) {
 	env.once.Do(func() {
 		initEnv()
 	})
@@ -96,9 +98,9 @@ func EnvId() string {
 	return env.Env.Id
 }
 
-func VolumesFromEnvironment(names []string) (result []*XbeeVolume) {
+func VolumesFromEnvironment(names []string) (result []XbeeElement[XbeeVolume]) {
 	for _, v := range VolumesForEnv() {
-		if util.Contains(names, v.Name) {
+		if util.Contains(names, v.Element.Name) {
 			result = append(result, v)
 		}
 	}
