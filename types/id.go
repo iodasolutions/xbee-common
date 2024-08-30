@@ -24,21 +24,14 @@ type Origin struct {
 
 // IdJson is used to identify one of three xbee abstractions: product, application, environment.
 type IdJson struct {
-	Version string `json:"version,omitempty"`
-	Origin  string `json:"origin,omitempty"`
-	Commit  string `json:"commit,omitempty"`
-	Alias   string `json:"alias,omitempty"`
+	Origin string `json:"origin,omitempty"`
+	Commit string `json:"commit,omitempty"`
+	Alias  string `json:"alias,omitempty"`
 }
 
 // Colon should be used only for log purpose
 func (m *IdJson) Colon() string { return m.withDelimiter(":") }
-func (m *IdJson) OriginVersion() string {
-	var version string
-	if m.Version != "" {
-		version = fmt.Sprintf(":%s", m.Version)
-	}
-	return fmt.Sprintf("%s%s", m.Origin, version)
-}
+
 func (m *IdJson) ShortName() string {
 	if m.Alias != "" {
 		return m.Alias
@@ -54,13 +47,6 @@ func (m *IdJson) withDelimiter(delimiter string) string {
 	return fmt.Sprintf("%s%s", m.Origin, extension)
 }
 
-func (m *IdJson) Equals(other *IdJson) bool {
-	if m == nil {
-		return other == nil
-	}
-	return other != nil && m.Version == other.Version && m.Origin == other.Origin
-}
-
 func (m *IdJson) Clone() IdJson {
 	return *m
 }
@@ -68,9 +54,6 @@ func (m *IdJson) Clone() IdJson {
 func (m *IdJson) AsMap() map[string]interface{} {
 	result := make(map[string]interface{})
 	result["origin"] = m.Origin
-	if m.Version != "" {
-		result["version"] = m.Version
-	}
 	if m.Alias != "" {
 		result["alias"] = m.Alias
 	}
