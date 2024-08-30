@@ -2,7 +2,6 @@ package types
 
 import (
 	"fmt"
-	"github.com/iodasolutions/xbee-common/newfs"
 	"path/filepath"
 	"strings"
 )
@@ -56,18 +55,6 @@ func (m *IdJson) AsMap() map[string]interface{} {
 	result["origin"] = m.Origin
 	if m.Alias != "" {
 		result["alias"] = m.Alias
-	}
-	return result
-}
-
-func (m *IdJson) Hash() string {
-	result := m.ShortName()
-	sa := newfs.NewShaAccumulator()
-	sa.AddString(m.Commit)
-	sa.AddString(m.Origin)
-	sha := sa.Sha()
-	if sha != "" {
-		result = result + "-" + sha
 	}
 	return result
 }
