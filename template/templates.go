@@ -89,11 +89,13 @@ func ErrorFromCLI(errors []string, usage string) *cmd.XbeeError {
 	return cmd.Error("\nERROR(s):\n%s\n\nUSAGE:\n%s", strings.Join(errors, "\n"), usage)
 }
 
-func dirPath(s string) string {
+func dirPath(value interface{}) string {
+	s := value.(string)
 	return filepath.ToSlash(filepath.Dir(s))
 }
 
-func ip(host string) string {
+func ip(value interface{}) string {
+	host := value.(string)
 	addr, err := net.LookupIP(host)
 	if err != nil {
 		panic(err)
@@ -101,20 +103,23 @@ func ip(host string) string {
 	return addr[0].String()
 }
 
-func majorVersion(version string) string {
+func majorVersion(value interface{}) string {
+	version := value.(string)
 	if !strings.Contains(version, ".") {
 		return version
 	}
 	result := version[:strings.Index(version, ".")]
 	return result
 }
-func minorVersion(version string) string {
+func minorVersion(value interface{}) string {
+	version := value.(string)
 	if !strings.Contains(version, ".") {
 		return ""
 	}
 	return strings.Split(version, ".")[1]
 }
-func patchVersion(version string) string {
+func patchVersion(value interface{}) string {
+	version := value.(string)
 	if !strings.Contains(version, ".") {
 		return ""
 	}
