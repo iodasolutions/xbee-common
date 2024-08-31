@@ -26,6 +26,7 @@ type IdJson struct {
 	Origin string `json:"origin,omitempty"`
 	Commit string `json:"commit,omitempty"`
 	Alias  string `json:"alias,omitempty"`
+	Ref    string `json:"ref,omitempty"`
 }
 
 // Colon should be used only for log purpose
