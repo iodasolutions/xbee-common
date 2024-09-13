@@ -326,7 +326,7 @@ func (f File) ExtractToFile(target File) (File, *cmd.XbeeError) {
 		}
 		reader = contentFile
 		closer = contentFile
-	case "bzip2":
+	case "bzip2", "bz2":
 		reader = bzip2.NewReader(sourceReader)
 	case "xz":
 		// Créer un lecteur gzip
