@@ -474,3 +474,22 @@ func (fd Folder) CompressToPath(target File, keepTar bool) (File, *cmd.XbeeError
 	}
 	return result, nil
 }
+
+func (fd Folder) ChangeOwner(uid, gid int) *cmd.XbeeError {
+	// Appliquer le changement sur le répertoire racine
+	if err := os.Chown(string(fd), uid, gid); err != nil {
+		return cmd.Error("failed to change owner for %s: %v", fd, err)
+	}
+	// Parcourir tous les fichiers et sous-répertoires
+	err := filepath.Walk(string(fd), func(p string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		// Changer l'owner de chaque fichier/sous-répertoire
+		if err := os.Chown(p, uid, gid); err != nil {
+			return fmt.Errorf("failed to change owner for %s: %v", p, err)
+		}
+		return nil
+	})
+	return cmd.Error("%v", err)
+}
