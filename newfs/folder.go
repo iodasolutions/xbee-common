@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"fmt"
 	"github.com/iodasolutions/xbee-common/cmd"
+	"github.com/iodasolutions/xbee-common/exec2"
 	"github.com/iodasolutions/xbee-common/stringutils"
 	"io"
 	"io/ioutil"
@@ -352,38 +353,13 @@ func (fd Folder) MoveTo(dir Folder) *cmd.XbeeError {
 }
 
 func (fd Folder) TarToFile(f File) *cmd.XbeeError {
-	tarfile, err := f.OpenFileForCreation()
+	args := strings.Split("--exclude=/dev --exclude=/proc --exclude=/sys --exclude=/tmp --exclude=/run --exclude=/mnt --exclude=/media --exclude=/lost+found --exclude=/xbee --exclude=/root/.xbee --exclude=/usr/bin/xbee -cvf", " ")
+	args = append(args, f.String(), fd.String())
+	aCmd := exec2.NewCommand("tar", args...)
+	err := aCmd.Run(nil)
+	out := aCmd.Result()
 	if err != nil {
-		return err
-	}
-	defer tarfile.Close()
-
-	// Créer un writer tar
-	tw := tar.NewWriter(tarfile)
-	defer tw.Close()
-
-	// Parcourir tous les fichiers et dossiers du répertoire source
-	err2 := filepath.Walk(fd.String(), func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if strings.HasPrefix(path, "/dev") ||
-			strings.HasPrefix(path, "/proc") ||
-			strings.HasPrefix(path, "/sys") ||
-			strings.HasPrefix(path, "/tmp") ||
-			strings.HasPrefix(path, "/run") ||
-			strings.HasPrefix(path, "/mnt") ||
-			strings.HasPrefix(path, "/media") ||
-			strings.HasPrefix(path, "/lost+found") ||
-			strings.HasPrefix(path, "/xbee") ||
-			strings.HasPrefix(path, "/root/.xbee") ||
-			path == "/usr/bin/xbee" {
-			return nil
-		}
-		return addFileToTar(tw, fd.String(), path, info)
-	})
-	if err2 != nil {
-		return cmd.Error("unexpected error when packaging folder %s as tar file %s: %v", fd, f, err2)
+		return cmd.Error("This command [%s] failed : %s", aCmd.String(), out)
 	}
 	return nil
 }
