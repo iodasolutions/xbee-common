@@ -367,6 +367,19 @@ func (fd Folder) TarToFile(f File) *cmd.XbeeError {
 		if err != nil {
 			return err
 		}
+		if strings.HasPrefix(path, "/dev") ||
+			strings.HasPrefix(path, "/proc") ||
+			strings.HasPrefix(path, "/sys") ||
+			strings.HasPrefix(path, "/tmp") ||
+			strings.HasPrefix(path, "/run") ||
+			strings.HasPrefix(path, "/mnt") ||
+			strings.HasPrefix(path, "/media") ||
+			strings.HasPrefix(path, "/lost+found") ||
+			strings.HasPrefix(path, "/xbee") ||
+			strings.HasPrefix(path, "/root/.xbee") ||
+			path == "/usr/bin/xbee" {
+			return nil
+		}
 		return addFileToTar(tw, fd.String(), path, info)
 	})
 	if err2 != nil {
