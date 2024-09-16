@@ -1,7 +1,6 @@
 package newfs
 
 import (
-	"archive/tar"
 	"archive/zip"
 	"bytes"
 	"compress/bzip2"
@@ -18,7 +17,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"syscall"
 )
 
 type File string
@@ -360,85 +358,4 @@ func (f File) ExtractToFile(target File) (File, *cmd.XbeeError) {
 func (f File) Extract() (File, *cmd.XbeeError) {
 	target := f.Dir().ChildFile(f.BaseWithoutExtension())
 	return f.ExtractToFile(target)
-}
-
-func (f File) UntarTo(targetFd Folder) *cmd.XbeeError {
-	// Ouvrir le fichier .tar
-	file, err := os.Open(f.String())
-	if err != nil {
-		return cmd.Error("cannot open file %s : %v", f.String(), err)
-	}
-	defer file.Close()
-
-	// Créer un nouveau lecteur tar
-	tarReader := tar.NewReader(file)
-
-	// Parcourir les fichiers dans le tar
-	for {
-		header, err := tarReader.Next()
-		if err == io.EOF {
-			// Fin du tar
-			break
-		}
-		if err != nil {
-			return cmd.Error("cannot untar file %s : %v", f.String(), err)
-		}
-
-		// Construire le chemin complet du fichier
-		path := filepath.Join(targetFd.String(), header.Name)
-
-		switch header.Typeflag {
-		case tar.TypeDir:
-			// Créer les répertoires s'ils n'existent pas
-			if err := os.MkdirAll(path, 0755); err != nil {
-				return cmd.Error("cannot create directory %s : %v", path, err)
-			}
-		case tar.TypeReg:
-			// Créer les fichiers réguliers
-			outFile, err := os.Create(path)
-			if err != nil {
-				return cmd.Error("cannot create file %s : %v", path, err)
-			}
-			defer outFile.Close()
-
-			// Copier le contenu du fichier
-			if _, err := io.Copy(outFile, tarReader); err != nil {
-				return cmd.Error("cannot add content to file %s : %v", path, err)
-			}
-		case tar.TypeSymlink:
-			// Créer des liens symboliques
-			if err := os.Symlink(header.Linkname, path); err != nil {
-				return cmd.Error("cannot create symlink %s : %v", path, err)
-			}
-		case tar.TypeLink:
-			// Créer des hardlinks
-			linkTarget := filepath.Join(targetFd.String(), header.Linkname)
-			if err := os.Link(linkTarget, path); err != nil {
-				return cmd.Error("cannot create symlink %s : %v", linkTarget, err)
-			}
-		case tar.TypeBlock:
-			// Créer un périphérique de bloc (nécessite les permissions root)
-			if err := syscall.Mknod(path, syscall.S_IFBLK|0755, int(header.Devmajor)<<8|int(header.Devminor)); err != nil {
-				return cmd.Error("cannot create bloc device %s : %v", path, err)
-			}
-		case tar.TypeChar:
-			// Créer un périphérique de caractère (nécessite les permissions root)
-			if err := syscall.Mknod(path, syscall.S_IFCHR|0755, int(header.Devmajor)<<8|int(header.Devminor)); err != nil {
-				return cmd.Error("cannot create character device %s : %v", path, err)
-			}
-		case tar.TypeFifo:
-			// Créer un FIFO (pipe nommé)
-			if err := syscall.Mkfifo(path, 0755); err != nil {
-				return cmd.Error("cannot create fifo device %s : %v", path, err)
-			}
-		default:
-			fmt.Printf("Type de fichier inconnu ou non géré : %s\n", header.Name)
-		}
-	}
-
-	return nil
-
-}
-func (f File) Untar() *cmd.XbeeError {
-	return f.UntarTo(f.Dir())
 }
