@@ -355,7 +355,7 @@ func (fd Folder) MoveTo(dir Folder) *cmd.XbeeError {
 func (fd Folder) TarToFile(f File) *cmd.XbeeError {
 	var args []string
 	if fd == "/" {
-		args = strings.Split("--exclude=./dev --exclude=./proc --exclude=./sys --exclude=./tmp --exclude=./run --exclude=./mnt --exclude=./media --exclude=./lost+found --exclude=./xbee --exclude=./root/.xbee --exclude=./usr/bin/xbee", " ")
+		args = strings.Split("--exclude=./dev --exclude=./proc --exclude=./sys --exclude=./tmp --exclude=./run --exclude=./mnt --exclude=./media --exclude=./lost+found --exclude=./xbee --exclude=./usr/bin/xbee", " ")
 	}
 	args = append(args, "-cvf", f.String(), ".")
 	aCmd := exec2.NewCommand("tar", args...).WithDirectory(fd.String())
