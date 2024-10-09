@@ -233,12 +233,18 @@ func (fd Folder) Dir() Folder {
 	return Folder(filepath.ToSlash(filepath.Dir(string(fd))))
 }
 func (fd Folder) CopyDirContentToDir(dstDir Folder) {
+	fd.CopyDirContentToDirKeepOwner(dstDir, true)
+}
+
+func (fd Folder) CopyDirContentToDirKeepOwner(dstDir Folder, keepOwner bool) {
 	dstDir.Create()
 	dstDir.ChMod(fd.Mod())
-	uid, gid := fd.Owner()
-	if uid != -1 {
-		if err := os.Chown(string(dstDir), uid, gid); err != nil {
-			panic(fmt.Errorf("Cannot change owner %d for file path %s : %v\n", uid, dstDir, err)) //TODO deals with errors
+	if keepOwner {
+		uid, gid := fd.Owner()
+		if uid != -1 {
+			if err := os.Chown(string(dstDir), uid, gid); err != nil {
+				panic(fmt.Errorf("Cannot change owner %d for file path %s : %v\n", uid, dstDir, err)) //TODO deals with errors
+			}
 		}
 	}
 	entries, err := ioutil.ReadDir(string(fd))
