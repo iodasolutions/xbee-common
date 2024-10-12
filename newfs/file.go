@@ -314,7 +314,7 @@ func (f File) ExtractToFile(target File) (File, *cmd.XbeeError) {
 		}
 		reader = gr
 		closer = gr
-	case "zip":
+	case "zip", "war":
 		r, err := zip.OpenReader(f.String())
 		if err != nil {
 			return "", cmd.Error("cannot open reader for %s : %v", f.String(), err)
