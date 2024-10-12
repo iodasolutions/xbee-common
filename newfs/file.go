@@ -289,12 +289,12 @@ func (f File) Compress(extension string) (File, *cmd.XbeeError) {
 	}
 	return target, nil
 }
-func (f File) ExtractTo(fd Folder) (File, *cmd.XbeeError) {
+func (f File) DecompressTarTo(fd Folder) (File, *cmd.XbeeError) {
 	fd.EnsureExists()
 	target := fd.ChildFile(f.BaseWithoutExtension())
-	return f.ExtractToFile(target)
+	return f.DecompressTarToFile(target)
 }
-func (f File) ExtractToFile(target File) (File, *cmd.XbeeError) {
+func (f File) DecompressTarToFile(target File) (File, *cmd.XbeeError) {
 	sourceReader, err := os.Open(f.String())
 	if err != nil {
 		return "", cmd.Error("cannot open file %s : %v", f.String(), err)
@@ -314,17 +314,6 @@ func (f File) ExtractToFile(target File) (File, *cmd.XbeeError) {
 		}
 		reader = gr
 		closer = gr
-	case "zip", "war":
-		r, err := zip.OpenReader(f.String())
-		if err != nil {
-			return "", cmd.Error("cannot open reader for %s : %v", f.String(), err)
-		}
-		contentFile, err := r.File[0].Open()
-		if err != nil {
-			return "", cmd.Error("cannot open reader for %s : %v", f.String(), err)
-		}
-		reader = contentFile
-		closer = contentFile
 	case "bzip2", "bz2":
 		reader = bzip2.NewReader(sourceReader)
 	case "xz":
@@ -355,7 +344,57 @@ func (f File) ExtractToFile(target File) (File, *cmd.XbeeError) {
 	}
 	return target, nil
 }
-func (f File) Extract() (File, *cmd.XbeeError) {
+func (f File) DecompressTar() (File, *cmd.XbeeError) {
 	target := f.Dir().ChildFile(f.BaseWithoutExtension())
-	return f.ExtractToFile(target)
+	return f.DecompressTarToFile(target)
+}
+
+func (f File) Unzip() *cmd.XbeeError {
+	// Ouvre le fichier ZIP
+	dest := f.Dir().String()
+	r, err := zip.OpenReader(f.String())
+	if err != nil {
+		return cmd.Error("cannot open zip reader for %s : %v", f.String(), err)
+	}
+	defer r.Close()
+
+	// Parcourt chaque fichier dans l'archive ZIP
+	for _, file := range r.File {
+		// Crée un chemin d'extraction complet pour le fichier/dossier
+		fpath := filepath.Join(dest, file.Name)
+
+		// Vérifie si c'est un dossier
+		if file.FileInfo().IsDir() {
+			// Crée le dossier
+			os.MkdirAll(fpath, os.ModePerm)
+			continue
+		}
+
+		// Crée les dossiers parents du fichier s'ils n'existent pas déjà
+		if err := os.MkdirAll(filepath.Dir(fpath), os.ModePerm); err != nil {
+			return cmd.Error("cannot create dir for %s : %v", fpath, err)
+		}
+
+		// Ouvre le fichier dans l'archive ZIP
+		rc, err := file.Open()
+		if err != nil {
+			return cmd.Error("cannot open file for %s : %v", fpath, err)
+		}
+		defer rc.Close()
+
+		// Crée le fichier sur le système de fichiers local
+		outFile, err := os.Create(fpath)
+		if err != nil {
+			return cmd.Error("cannot create file for %s : %v", fpath, err)
+		}
+		defer outFile.Close()
+
+		// Copie le contenu du fichier ZIP vers le fichier local
+		_, err = io.Copy(outFile, rc)
+		if err != nil {
+			return cmd.Error("cannot add content to file %s : %v", fpath, err)
+		}
+	}
+
+	return nil
 }
