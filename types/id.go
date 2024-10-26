@@ -19,6 +19,7 @@ func ShortNameFromOrigin(origin string) string {
 type Origin struct {
 	Repo   string `json:"repo,omitempty"`
 	Commit string `json:"commit,omitempty"`
+	Ref    string `json:"ref,omitempty"`
 }
 
 // IdJson is used to identify one of three xbee abstractions: product, application, environment.
