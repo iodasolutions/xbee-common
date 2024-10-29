@@ -24,10 +24,8 @@ type Origin struct {
 
 // IdJson is used to identify one of three xbee abstractions: product, application, environment.
 type IdJson struct {
-	Origin string `json:"origin,omitempty"`
-	Commit string `json:"commit,omitempty"`
-	Alias  string `json:"alias,omitempty"`
-	Ref    string `json:"ref,omitempty"`
+	Origin
+	Alias string `json:"alias,omitempty"`
 }
 
 // Colon should be used only for log purpose
@@ -37,7 +35,7 @@ func (m *IdJson) ShortName() string {
 	if m.Alias != "" {
 		return m.Alias
 	}
-	return ShortNameFromOrigin(m.Origin)
+	return ShortNameFromOrigin(m.Repo)
 }
 
 func (m *IdJson) withDelimiter(delimiter string) string {
