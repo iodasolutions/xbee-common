@@ -12,12 +12,7 @@ func CachedFileForUrl(rawUrl string) File {
 	return fd.ChildFile(name)
 }
 func CacheArtefacts() Folder { return xbeeIntern().ChildFolder("cache-artefacts") }
-func VolumesFolder() Folder  { return xbeeIntern().ChildFolder("volumes") }
 func CacheElements() Folder  { return xbeeIntern().ChildFolder("cache-elements") }
-func EnvsFolder() Folder     { return xbeeIntern().ChildFolder("envs") }
 func LogsFolder() Folder     { return xbeeIntern().ChildFolder("logs") }
 func Rsa() *RsaGenerator     { return NewRsaGen(SSHFolder()) }
-func ProviderFolder(provider string) Folder {
-	return EnvsFolder().ChildFolder(provider)
-}
-func TmpDir() Folder { return xbeeIntern().ChildFolder("tmp") }
+func TmpDir() Folder         { return xbeeIntern().ChildFolder("tmp") }
