@@ -43,7 +43,7 @@ func (m *IdJson) withDelimiter(delimiter string) string {
 	if m.Commit != "" {
 		extension = delimiter + m.Commit
 	}
-	return fmt.Sprintf("%s%s", m.Origin, extension)
+	return fmt.Sprintf("%s%s", m.Origin.Repo, extension)
 }
 
 func (m *IdJson) Clone() IdJson {
