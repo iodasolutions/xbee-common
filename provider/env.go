@@ -120,3 +120,10 @@ func VolumesFromEnvironment(names []string) (result []XbeeElement[XbeeVolume]) {
 	}
 	return
 }
+
+func SystemProviderDataFor(systemHash string) map[string]interface{} {
+	env.once.Do(func() {
+		initEnv()
+	})
+	return env.Env.SystemProviderData[systemHash].(map[string]interface{})
+}
