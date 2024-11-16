@@ -28,6 +28,7 @@ type Env struct {
 	Volumes            []XbeeElement[XbeeVolume] `json:"volumes,omitempty"`
 	Nets               []XbeeElement[XbeeNet]    `json:"nets,omitempty"`
 	SystemProviderData map[string]interface{}    `json:"system_provider_data,omitempty"`
+	Provider           map[string]interface{}    `json:"provider,omitempty"`
 }
 
 type XbeeHost struct {
