@@ -41,6 +41,7 @@ type XbeeHost struct {
 	SystemHash string        `json:"systemhash,omitempty"`
 	PackId     *types.IdJson `json:"packid,omitempty"`
 	PackHash   string        `json:"packhash,omitempty"`
+	OsArch     string        `json:"osarch,omitempty"`
 }
 
 type XbeeVolume struct {
@@ -62,6 +63,17 @@ func initEnv() {
 	var err *cmd.XbeeError
 	if env.Env, err = newfs.Unmarshal[*Env](envJson()); err != nil {
 		newfs.DoExitOnError(err)
+	}
+}
+
+func mergeProviders() {
+	hostProvider := env.Env.Provider["host"].(map[string]interface{})
+	for _, h := range env.Env.Hosts {
+		h.Provider = util.MergeMaps(hostProvider, h.Provider)
+	}
+	volumeProvider := env.Env.Provider["volume"].(map[string]interface{})
+	for _, v := range env.Env.Volumes {
+		v.Provider = util.MergeMaps(volumeProvider, v.Provider)
 	}
 }
 
