@@ -22,11 +22,12 @@ func Save(e *Env) {
 }
 
 type Env struct {
-	Id      string                    `json:"id"`
-	Name    string                    `json:"name"`
-	Hosts   []XbeeElement[XbeeHost]   `json:"hosts,omitempty"`
-	Volumes []XbeeElement[XbeeVolume] `json:"volumes,omitempty"`
-	Nets    []XbeeElement[XbeeNet]    `json:"nets,omitempty"`
+	Id                 string                    `json:"id"`
+	Name               string                    `json:"name"`
+	Hosts              []XbeeElement[XbeeHost]   `json:"hosts,omitempty"`
+	Volumes            []XbeeElement[XbeeVolume] `json:"volumes,omitempty"`
+	Nets               []XbeeElement[XbeeNet]    `json:"nets,omitempty"`
+	SystemProviderData map[string]interface{}    `json:"system_provider_data,omitempty"`
 }
 
 type XbeeHost struct {
