@@ -64,9 +64,6 @@ func initEnv() {
 	if env.Env, err = newfs.Unmarshal[*Env](envJson()); err != nil {
 		newfs.DoExitOnError(err)
 	}
-}
-
-func mergeProviders() {
 	hostProvider := env.Env.Provider["host"].(map[string]interface{})
 	for _, h := range env.Env.Hosts {
 		h.Provider = util.MergeMaps(hostProvider, h.Provider)
