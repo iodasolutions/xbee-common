@@ -66,11 +66,13 @@ func initEnv() {
 	}
 	hostProvider := env.Env.Provider["host"].(map[string]interface{})
 	for _, h := range env.Env.Hosts {
-		h.Provider = util.MergeMaps(hostProvider, h.Provider)
+		merged := util.MergeMaps(hostProvider, h.Provider)
+		h.Provider = merged
 	}
 	volumeProvider := env.Env.Provider["volume"].(map[string]interface{})
 	for _, v := range env.Env.Volumes {
-		v.Provider = util.MergeMaps(volumeProvider, v.Provider)
+		merged := util.MergeMaps(volumeProvider, v.Provider)
+		v.Provider = merged
 	}
 }
 
