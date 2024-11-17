@@ -65,14 +65,12 @@ func initEnv() {
 		newfs.DoExitOnError(err)
 	}
 	hostProvider := env.Env.Provider["host"].(map[string]interface{})
-	for _, h := range env.Env.Hosts {
-		merged := util.MergeMaps(hostProvider, h.Provider)
-		h.Provider = merged
+	for index := range env.Env.Hosts {
+		env.Env.Hosts[index].Provider = util.MergeMaps(hostProvider, env.Env.Hosts[index].Provider)
 	}
 	volumeProvider := env.Env.Provider["volume"].(map[string]interface{})
-	for _, v := range env.Env.Volumes {
-		merged := util.MergeMaps(volumeProvider, v.Provider)
-		v.Provider = merged
+	for index := range env.Env.Volumes {
+		env.Env.Volumes[index].Provider = util.MergeMaps(volumeProvider, env.Env.Volumes[index].Provider)
 	}
 }
 
