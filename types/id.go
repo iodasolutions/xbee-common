@@ -31,12 +31,12 @@ type IdJson struct {
 // Colon should be used only for log purpose
 func (m *IdJson) Colon() string { return m.withDelimiter(":") }
 
-func (m *IdJson) ShortName() string {
-	if m.Alias != "" {
-		return m.Alias
-	}
-	return ShortNameFromOrigin(m.Repo)
-}
+//func (m *IdJson) ShortName() string {
+//	if m.Alias != "" {
+//		return m.Alias
+//	}
+//	return ShortNameFromOrigin(m.Repo)
+//}
 
 func (m *IdJson) withDelimiter(delimiter string) string {
 	var extension string
