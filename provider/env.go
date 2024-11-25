@@ -32,16 +32,18 @@ type Env struct {
 }
 
 type XbeeHost struct {
-	Name       string        `json:"name,omitempty"`
-	Ports      []string      `json:"ports,omitempty"`
-	Volumes    []string      `json:"volumes,omitempty"`
-	User       string        `json:"user,omitempty"`
-	ExternalIp string        `json:"externalip,omitempty"`
-	SystemId   *types.IdJson `json:"systemid,omitempty"`
-	SystemHash string        `json:"systemhash,omitempty"`
-	PackId     *types.IdJson `json:"packid,omitempty"`
-	PackHash   string        `json:"packhash,omitempty"`
-	OsArch     string        `json:"osarch,omitempty"`
+	Name         string        `json:"name,omitempty"`
+	Ports        []string      `json:"ports,omitempty"`
+	Volumes      []string      `json:"volumes,omitempty"`
+	User         string        `json:"user,omitempty"`
+	ExternalIp   string        `json:"externalip,omitempty"`
+	SystemName   string        `json:"system_name,omitempty"`
+	SystemOrigin *types.Origin `json:"system_origin,omitempty"`
+	SystemHash   string        `json:"systemhash,omitempty"`
+	PackName     string        `json:"pack_name,omitempty"`
+	PackOrigin   *types.Origin `json:"pack_origin,omitempty"`
+	PackHash     string        `json:"packhash,omitempty"`
+	OsArch       string        `json:"osarch,omitempty"`
 }
 
 type XbeeVolume struct {
