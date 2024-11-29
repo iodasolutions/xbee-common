@@ -82,6 +82,7 @@ func DefaultFunctions() template.FuncMap {
 		"majorVersion": majorVersion,
 		"minorVersion": minorVersion,
 		"patchVersion": patchVersion,
+		"gt":           gt,
 	}
 }
 
@@ -128,4 +129,24 @@ func patchVersion(value interface{}) string {
 		return ""
 	}
 	return splitted[2]
+}
+
+func gt(a, b interface{}) bool {
+	switch v1 := a.(type) {
+	case int:
+		switch v2 := b.(type) {
+		case int:
+			return v1 > v2
+		case float64:
+			return float64(v1) > v2
+		}
+	case float64:
+		switch v2 := b.(type) {
+		case int:
+			return v1 > float64(v2)
+		case float64:
+			return v1 > v2
+		}
+	}
+	return false
 }
