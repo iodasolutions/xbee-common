@@ -48,14 +48,14 @@ func createArchive(binFile newfs.File, osName string) (newfs.File, *cmd.XbeeErro
 	if osName == "windows" {
 		zFile, err := binFile.Compress("zip")
 		if err != nil {
-			return "", err
+			return newfs.NewFile(""), err
 		}
 		fmt.Println("zipped OK")
 		return zFile, nil
 	} else {
 		zFile, err := binFile.Compress("gz")
 		if err != nil {
-			return "", err
+			return newfs.NewFile(""), err
 		}
 		fmt.Println("gz OK")
 		return zFile, nil
@@ -121,7 +121,7 @@ func buildFor(ctx context.Context, commit string, release string, goos string, g
 	aCmd.Stdout = os.Stdout
 	err := aCmd.Run()
 	if err != nil {
-		return "", cmd.Error("command %s %v failed: %v", aCmd.Path, strings.Join(aCmd.Args, " "), err)
+		return newfs.NewFile(""), cmd.Error("command %s %v failed: %v", aCmd.Path, strings.Join(aCmd.Args, " "), err)
 	}
 	fmt.Println("OK")
 	return binFile, nil
