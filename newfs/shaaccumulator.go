@@ -31,15 +31,7 @@ func (sa *ShaAccumulator) AddObject(o interface{}) {
 	}
 	sa.empty = false
 }
-func (sa *ShaAccumulator) AddPath(p Path) {
-	if p == "" {
-		return
-	}
-	if _, err := sa.h.Write([]byte(p.Sha1())); err != nil {
-		panic(err)
-	}
-	sa.empty = false
-}
+
 func (sa *ShaAccumulator) AddString(s string) {
 	if s == "" {
 		return

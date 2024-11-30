@@ -32,7 +32,7 @@ type RsaGenerator struct {
 }
 
 func NewRsaGen(folder Folder) *RsaGenerator {
-	if folder == "" {
+	if folder.String() == "" {
 		folder = SSHFolder()
 	}
 	return &RsaGenerator{

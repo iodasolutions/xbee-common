@@ -7,7 +7,7 @@ import (
 )
 
 func (f File) Owner() (uid int, gid int) {
-	si, err := os.Stat(string(f))
+	si, err := os.Stat(f.String())
 	if err != nil {
 		panic(cmd.Error("unexpected error when finding owner for folder %s : %v", f, err))
 	}

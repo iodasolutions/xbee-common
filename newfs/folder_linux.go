@@ -7,11 +7,11 @@ import (
 )
 
 func (fd Folder) String() string {
-	return string(fd)
+	return fd.String()
 }
 
 func (fd Folder) Owner() (uid int, gid int) {
-	si, err := os.Stat(string(fd))
+	si, err := os.Stat(fd.String())
 	if err != nil {
 		panic(cmd.Error("unexpected error when finding owner for folder %s : %v", fd, err))
 	}
