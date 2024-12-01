@@ -8,9 +8,9 @@ import (
 	"strings"
 )
 
-type Path2 string
+type Path string
 
-func (p Path2) Exists() bool {
+func (p Path) Exists() bool {
 	_, err := os.Stat(string(p))
 	if err == nil {
 		return true
@@ -18,11 +18,11 @@ func (p Path2) Exists() bool {
 	return false
 }
 
-func (p Path2) Child(name string) Path2 {
-	return Path2(filepath.ToSlash(filepath.Join(string(p), name)))
+func (p Path) Child(name string) Path {
+	return Path(filepath.ToSlash(filepath.Join(string(p), name)))
 }
 
-func (p Path2) BaseWithoutExtension() string {
+func (p Path) BaseWithoutExtension() string {
 	base := filepath.Base(string(p))
 	index := strings.LastIndex(base, ".")
 	if index != -1 {
@@ -31,7 +31,7 @@ func (p Path2) BaseWithoutExtension() string {
 	return base
 }
 
-func (p Path2) Extension() string {
+func (p Path) Extension() string {
 	base := filepath.Base(string(p))
 	index := strings.LastIndex(base, ".")
 	if index != -1 {
@@ -40,25 +40,25 @@ func (p Path2) Extension() string {
 	return ""
 }
 
-func (p Path2) Base() string {
+func (p Path) Base() string {
 	return filepath.Base(string(p))
 }
 
-func (p Path2) Hash() string {
+func (p Path) Hash() string {
 	return p.Base() + "-" + stringutils.Sha1StringTruncated(filepath.Dir(string(p)))
 }
-func (p Path2) WithoutHash() Path2 {
-	return Path2(p.String()[:len(p.String())-11])
+func (p Path) WithoutHash() Path {
+	return Path(p.String()[:len(p.String())-11])
 }
 
-func (p Path2) IsDir() bool {
+func (p Path) IsDir() bool {
 	fi, err := os.Lstat(string(p))
 	if err == nil {
 		return fi.IsDir()
 	}
 	return false
 }
-func (p Path2) IsLink() bool {
+func (p Path) IsLink() bool {
 	fi, err := os.Lstat(string(p))
 	if err == nil {
 		return fi.Mode()&os.ModeSymlink != 0
@@ -66,17 +66,17 @@ func (p Path2) IsLink() bool {
 	return false
 }
 
-func (p Path2) IsAbs() bool {
+func (p Path) IsAbs() bool {
 	return filepath.IsAbs(string(p))
 }
-func (p Path2) IsRelative() bool {
+func (p Path) IsRelative() bool {
 	return !p.IsAbs()
 }
-func (p Path2) IsDescendantOf(another Path2) bool {
+func (p Path) IsDescendantOf(another Path) bool {
 	return strings.HasPrefix(string(p), string(another))
 }
 
-func (p Path2) IsSymLink() bool {
+func (p Path) IsSymLink() bool {
 	fi, err := os.Stat(string(p))
 	if err == nil {
 		return fi.Mode()&os.ModeSymlink == os.ModeSymlink
@@ -84,7 +84,7 @@ func (p Path2) IsSymLink() bool {
 	return false
 }
 
-func (p Path2) RelativeFrom(another Path2) Path2 {
+func (p Path) RelativeFrom(another Path) Path {
 	if p.IsRelative() {
 		panic(fmt.Errorf("method Path.RelativeFrom : path %s is not an absolute path", p))
 	}
@@ -93,17 +93,17 @@ func (p Path2) RelativeFrom(another Path2) Path2 {
 		pS := p.String()
 		trimmed := strings.TrimPrefix(pS, folderS)
 		trimmed = strings.TrimLeft(trimmed, "/")
-		return Path2(trimmed)
+		return Path(trimmed)
 	} else {
 		panic(fmt.Errorf("path %s is not a descendant of %s", p, another))
 	}
 }
 
-func (p Path2) Dir() Folder {
+func (p Path) Dir() Folder {
 	return NewFolder(filepath.Dir(p.String()))
 }
 
-func (p Path2) ChMod(mod os.FileMode) {
+func (p Path) ChMod(mod os.FileMode) {
 	err := os.Chmod(p.String(), mod)
 	if err != nil {
 		panic(err)

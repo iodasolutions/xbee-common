@@ -2,6 +2,6 @@ package newfs
 
 import "path/filepath"
 
-func (p Path2) String() string {
+func (p Path) String() string {
 	return filepath.ToSlash(string(p))
 }

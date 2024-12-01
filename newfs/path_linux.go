@@ -1,5 +1,5 @@
 package newfs
 
-func (p Path2) String() string {
+func (p Path) String() string {
 	return string(p)
 }

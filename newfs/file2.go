@@ -17,11 +17,11 @@ import (
 )
 
 type File struct {
-	Path2
+	Path
 }
 
 func NewFile(path string) File {
-	return File{Path2(path)}
+	return File{Path(path)}
 }
 func (f File) IsYAML() bool {
 	return strings.HasSuffix(f.String(), YamlExt)

@@ -3,6 +3,7 @@ package newfs
 import (
 	"fmt"
 	"github.com/iodasolutions/xbee-common/cmd"
+	"github.com/iodasolutions/xbee-common/exec2"
 	"io/ioutil"
 	"log"
 	"os"
@@ -28,11 +29,11 @@ func init() {
 }
 
 type Folder struct {
-	Path2
+	Path
 }
 
 func NewFolder(path string) Folder {
-	return Folder{Path2(path)}
+	return Folder{Path(path)}
 }
 
 func (fd Folder) EnsureEmpty() {
@@ -95,11 +96,11 @@ func (fd Folder) Delete() *cmd.XbeeError {
 
 func (fd Folder) ChildFile(name string) File {
 	path := fd.Child(name)
-	return File{Path2: path}
+	return File{Path: path}
 }
 func (fd Folder) ChildFolder(name string) Folder {
 	path := fd.Child(name)
-	return Folder{Path2: path}
+	return Folder{Path: path}
 }
 func (fd Folder) ChildFileJson(name string) File {
 	return fd.ChildFile(name + jsonExt)
@@ -149,7 +150,7 @@ func (fd Folder) ChildrenFilesAndFolders() (theFiles []File, theFolders []Folder
 	return
 }
 
-func (fd Folder) Children() (result []Path2) {
+func (fd Folder) Children() (result []Path) {
 	fis, err := os.ReadDir(fd.String())
 	if err != nil {
 		panic(fmt.Errorf("Cannot not read children files for folder %s : %v\n", fd, err))
@@ -176,7 +177,7 @@ func (fd Folder) ChildrenFilesAndFoldersRelativePaths() (result []string) {
 	return
 }
 
-func (fd Folder) ChildPath(name string) Path2 {
+func (fd Folder) ChildPath(name string) Path {
 	return fd.Child(name)
 }
 
@@ -239,4 +240,19 @@ func (fd Folder) CopyDirContentToDirKeepOwner(dstDir Folder, keepOwner bool) {
 
 	}
 	return
+}
+
+func (fd Folder) TarToFile(f File) *cmd.XbeeError {
+	var args []string
+	if fd.String() == "/" {
+		args = strings.Split("--exclude=./dev --exclude=./proc --exclude=./sys --exclude=./tmp --exclude=./run --exclude=./mnt --exclude=./media --exclude=./lost+found --exclude=./xbee --exclude=./usr/bin/xbee", " ")
+	}
+	args = append(args, "-cvf", f.String(), ".")
+	aCmd := exec2.NewCommand("tar", args...).WithDirectory(fd.String())
+	err := aCmd.Run(nil)
+	out := aCmd.Result()
+	if err != nil {
+		return cmd.Error("This command [%s] failed : %s", aCmd.String(), out)
+	}
+	return nil
 }
