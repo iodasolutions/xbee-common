@@ -10,10 +10,6 @@ import (
 
 type Path2 string
 
-func (p Path2) String() string {
-	return string(p)
-}
-
 func (p Path2) Exists() bool {
 	_, err := os.Stat(string(p))
 	if err == nil {

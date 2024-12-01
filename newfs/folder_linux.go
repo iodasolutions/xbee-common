@@ -6,10 +6,6 @@ import (
 	"syscall"
 )
 
-func (fd Folder) String() string {
-	return fd.String()
-}
-
 func (fd Folder) Owner() (uid int, gid int) {
 	si, err := os.Stat(fd.String())
 	if err != nil {
