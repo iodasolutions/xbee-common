@@ -267,3 +267,30 @@ func (fd Folder) ChModRecursive(mod os.FileMode) {
 		aFile.ChMod(mod)
 	}
 }
+
+func (fd Folder) Compress(extension string, keepTar bool) (File, *cmd.XbeeError) {
+	return fd.CompressToDir(fd.Dir(), extension, keepTar)
+}
+
+// CompressToDir supports gz, zip
+func (fd Folder) CompressToDir(target Folder, extension string, keepTar bool) (File, *cmd.XbeeError) {
+	target.EnsureExists()
+	return fd.CompressToPath(target.ChildFile(fd.Base()+"."+extension), keepTar)
+}
+
+func (fd Folder) CompressToPath(target File, keepTar bool) (File, *cmd.XbeeError) {
+	targetTar := target.Dir().ChildFile(target.BaseWithoutExtension() + ".tar")
+	if err := fd.TarToFile(targetTar); err != nil {
+		return NewFile(""), err
+	}
+	result, err := targetTar.Compress(target.Extension())
+	if err != nil {
+		return NewFile(""), err
+	}
+	if !keepTar {
+		if err := targetTar.EnsureDelete(); err != nil {
+			return NewFile(""), err
+		}
+	}
+	return result, nil
+}
