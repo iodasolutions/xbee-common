@@ -109,3 +109,11 @@ func (p Path2) ChMod(mod os.FileMode) {
 		panic(err)
 	}
 }
+
+func (fd Folder) Mod() os.FileMode {
+	si, err := os.Stat(fd.String())
+	if err != nil {
+		panic(err)
+	}
+	return si.Mode()
+}
