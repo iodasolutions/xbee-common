@@ -256,3 +256,14 @@ func (fd Folder) TarToFile(f File) *cmd.XbeeError {
 	}
 	return nil
 }
+
+func (fd Folder) ChModRecursive(mod os.FileMode) {
+	files, dirs := fd.ChildrenFilesAndFolders()
+	for _, aDir := range dirs {
+		aDir.ChMod(mod)
+		aDir.ChModRecursive(mod)
+	}
+	for _, aFile := range files {
+		aFile.ChMod(mod)
+	}
+}
