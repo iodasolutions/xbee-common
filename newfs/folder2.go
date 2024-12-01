@@ -298,3 +298,7 @@ func (fd Folder) CompressToPath(target File, keepTar bool) (File, *cmd.XbeeError
 func (fd Folder) RandomFile() File {
 	return fd.ChildFile(stringutils.RandomString())
 }
+
+func (fd Folder) RandomChildFolder() Folder {
+	return fd.ChildFolder(stringutils.RandomString())
+}
