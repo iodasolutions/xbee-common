@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/iodasolutions/xbee-common/cmd"
 	"github.com/iodasolutions/xbee-common/exec2"
+	"github.com/iodasolutions/xbee-common/stringutils"
 	"io/ioutil"
 	"log"
 	"os"
@@ -293,4 +294,7 @@ func (fd Folder) CompressToPath(target File, keepTar bool) (File, *cmd.XbeeError
 		}
 	}
 	return result, nil
+}
+func (fd Folder) RandomFile() File {
+	return fd.ChildFile(stringutils.RandomString())
 }
