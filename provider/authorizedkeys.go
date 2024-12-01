@@ -22,7 +22,7 @@ systemctl restart sshd
 
 func authorizedKeyModel(user string) map[string]interface{} {
 	aMap := map[string]interface{}{
-		"xbeepublickey": strings.TrimSpace(newfs.NewRsaGen("").RootAuthorizedKey().Content()),
+		"xbeepublickey": strings.TrimSpace(newfs.NewRsaGen(newfs.NewFolder("")).RootAuthorizedKey().Content()),
 		"user":          user,
 	}
 	return aMap
