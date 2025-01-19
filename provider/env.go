@@ -8,9 +8,8 @@ import (
 	"sync"
 )
 
-type XbeeElement[T any] struct {
+type PElement struct {
 	Provider map[string]interface{} `json:"provider,omitempty"`
-	Element  T                      `json:"element,omitempty"`
 }
 
 func envJson() newfs.File {
@@ -22,16 +21,17 @@ func Save(e *Env) {
 }
 
 type Env struct {
-	Id                 string                    `json:"id"`
-	Name               string                    `json:"name"`
-	Hosts              []XbeeElement[XbeeHost]   `json:"hosts,omitempty"`
-	Volumes            []XbeeElement[XbeeVolume] `json:"volumes,omitempty"`
-	Nets               []XbeeElement[XbeeNet]    `json:"nets,omitempty"`
-	SystemProviderData map[string]interface{}    `json:"system_provider_data,omitempty"`
-	Provider           map[string]interface{}    `json:"provider,omitempty"`
+	PElement
+	Id                 string                 `json:"id"`
+	Name               string                 `json:"name"`
+	Hosts              []XbeeHost             `json:"hosts,omitempty"`
+	Volumes            []XbeeVolume           `json:"volumes,omitempty"`
+	Nets               []XbeeNet              `json:"nets,omitempty"`
+	SystemProviderData map[string]interface{} `json:"system_provider_data,omitempty"`
 }
 
 type XbeeHost struct {
+	PElement
 	Name         string        `json:"name,omitempty"`
 	Ports        []string      `json:"ports,omitempty"`
 	Volumes      []string      `json:"volumes,omitempty"`
@@ -47,6 +47,7 @@ type XbeeHost struct {
 }
 
 type XbeeVolume struct {
+	PElement
 	Name string `json:"name,omitempty"`
 	Size int    `json:"size,omitempty"`
 }
@@ -76,20 +77,20 @@ func initEnv() {
 	}
 }
 
-func Hosts() (result []XbeeElement[XbeeHost]) {
+func Hosts() (result []XbeeHost) {
 	env.once.Do(func() {
 		initEnv()
 	})
 	return env.Env.Hosts
 }
 
-func VolumesForEnv() (result []XbeeElement[XbeeVolume]) {
+func VolumesForEnv() (result []XbeeVolume) {
 	env.once.Do(func() {
 		initEnv()
 	})
 	return env.Env.Volumes
 }
-func NetsForEnv() (result []XbeeElement[XbeeNet]) {
+func NetsForEnv() (result []XbeeNet) {
 	env.once.Do(func() {
 		initEnv()
 	})
@@ -111,9 +112,9 @@ func EnvId() string {
 	return env.Env.Id
 }
 
-func VolumesFromEnvironment(names []string) (result []XbeeElement[XbeeVolume]) {
+func VolumesFromEnvironment(names []string) (result []XbeeVolume) {
 	for _, v := range VolumesForEnv() {
-		if util.Contains(names, v.Element.Name) {
+		if util.Contains(names, v.Name) {
 			result = append(result, v)
 		}
 	}
