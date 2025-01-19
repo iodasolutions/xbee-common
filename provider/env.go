@@ -20,9 +20,9 @@ type Env struct {
 	Provider           map[string]interface{} `json:"provider,omitempty"`
 	Id                 string                 `json:"id"`
 	Name               string                 `json:"name"`
-	Hosts              []XbeeHost             `json:"hosts,omitempty"`
-	Volumes            []XbeeVolume           `json:"volumes,omitempty"`
-	Nets               []XbeeNet              `json:"nets,omitempty"`
+	Hosts              []*XbeeHost            `json:"hosts,omitempty"`
+	Volumes            []*XbeeVolume          `json:"volumes,omitempty"`
+	Nets               []*XbeeNet             `json:"nets,omitempty"`
 	SystemProviderData map[string]interface{} `json:"system_provider_data,omitempty"`
 }
 
@@ -73,20 +73,20 @@ func initEnv() {
 	}
 }
 
-func Hosts() (result []XbeeHost) {
+func Hosts() (result []*XbeeHost) {
 	env.once.Do(func() {
 		initEnv()
 	})
 	return env.Env.Hosts
 }
 
-func VolumesForEnv() (result []XbeeVolume) {
+func VolumesForEnv() (result []*XbeeVolume) {
 	env.once.Do(func() {
 		initEnv()
 	})
 	return env.Env.Volumes
 }
-func NetsForEnv() (result []XbeeNet) {
+func NetsForEnv() (result []*XbeeNet) {
 	env.once.Do(func() {
 		initEnv()
 	})
@@ -108,7 +108,7 @@ func EnvId() string {
 	return env.Env.Id
 }
 
-func VolumesFromEnvironment(names []string) (result []XbeeVolume) {
+func VolumesFromEnvironment(names []string) (result []*XbeeVolume) {
 	for _, v := range VolumesForEnv() {
 		if util.Contains(names, v.Name) {
 			result = append(result, v)
