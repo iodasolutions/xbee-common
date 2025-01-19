@@ -9,6 +9,7 @@ import (
 	"golang.org/x/crypto/ssh"
 	"io"
 	"os"
+	"strings"
 )
 
 type SSHClient struct {
@@ -196,4 +197,79 @@ func (hr *SSHClient) upload(r io.Reader, length int64, name string, todir newfs.
 		err = cmd.Error("command [%s] for session [%s] failed: %v", command, hr.conn.RemoteAddr().String(), err)
 	}
 	return
+}
+
+func (hr *SSHClient) UploadContent(content string, path newfs.File) (err *cmd.XbeeError) {
+	r := strings.NewReader(content)
+	length := int64(len(content))
+	return hr.upload(r, length, path.Base(), path.Dir())
+}
+
+func (hr *SSHClient) Download(remoteFile newfs.File, todir newfs.Folder) (err *cmd.XbeeError) {
+	todir.EnsureExists()
+	sess, err2 := hr.conn.NewSession()
+	if err2 != nil {
+		return cmd.Error("cannot create a session for connection: %v", err2)
+	}
+	defer func() {
+		if sess != nil {
+			if err3 := sess.Close(); err3 != nil && err3 != io.EOF {
+				log2.Warnf("An error occurred when closing session : %v", err3)
+			}
+		}
+	}()
+
+	localPath := todir.ChildFile(remoteFile.Base())
+	var f *os.File
+	f, err = localPath.OpenFileForCreation()
+	if err != nil {
+		return
+	}
+	defer f.Close()
+
+	go func() {
+		r, _ := sess.StdoutPipe()
+		if err4 := downloadInternScp(r, f); err4 != nil {
+			err = err4
+		}
+	}()
+
+	command := fmt.Sprintf("sudo /usr/bin/scp -f %s", remoteFile)
+	if err := sess.Run(command); err != nil {
+		return cmd.Error("command [%s] for session failed: %v", command, err)
+	}
+	return nil
+}
+
+func downloadInternScp(r io.Reader, w io.Writer) (err *cmd.XbeeError) {
+	buf := make([]byte, 1)
+	if _, err2 := r.Read(buf); err2 != nil {
+		err = cmd.Error("error reading from remote: %v", err2)
+		return
+	}
+
+	for {
+		_, err2 := r.Read(buf)
+		if err2 != nil {
+			err = cmd.Error("error reading from remote: %v", err2)
+			return
+		}
+		if buf[0] == 'C' {
+			break
+		}
+	}
+
+	_, err2 := fmt.Fscanln(r)
+	if err2 != nil {
+		err = cmd.Error("error reading file details: %v", err2)
+		return
+	}
+
+	_, err3 := io.Cotpy(w, r)
+	if err3 != nil {
+		err = cmd.Error("error copying data to local file: %v", err3)
+		return err
+	}
+
+	return nil
 }
