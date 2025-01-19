@@ -8,10 +8,6 @@ import (
 	"sync"
 )
 
-type PElement struct {
-	Provider map[string]interface{} `json:"provider,omitempty"`
-}
-
 func envJson() newfs.File {
 	return newfs.ChildXbee(newfs.CWD()).ChildFileJson("env")
 }
@@ -21,7 +17,7 @@ func Save(e *Env) {
 }
 
 type Env struct {
-	PElement
+	Provider           map[string]interface{} `json:"provider,omitempty"`
 	Id                 string                 `json:"id"`
 	Name               string                 `json:"name"`
 	Hosts              []XbeeHost             `json:"hosts,omitempty"`
@@ -31,25 +27,25 @@ type Env struct {
 }
 
 type XbeeHost struct {
-	PElement
-	Name         string        `json:"name,omitempty"`
-	Ports        []string      `json:"ports,omitempty"`
-	Volumes      []string      `json:"volumes,omitempty"`
-	User         string        `json:"user,omitempty"`
-	ExternalIp   string        `json:"externalip,omitempty"`
-	SystemName   string        `json:"system_name,omitempty"`
-	SystemOrigin *types.Origin `json:"system_origin,omitempty"`
-	SystemHash   string        `json:"systemhash,omitempty"`
-	PackName     string        `json:"pack_name,omitempty"`
-	PackOrigin   *types.Origin `json:"pack_origin,omitempty"`
-	PackHash     string        `json:"packhash,omitempty"`
-	OsArch       string        `json:"osarch,omitempty"`
+	Provider     map[string]interface{} `json:"provider,omitempty"`
+	Name         string                 `json:"name,omitempty"`
+	Ports        []string               `json:"ports,omitempty"`
+	Volumes      []string               `json:"volumes,omitempty"`
+	User         string                 `json:"user,omitempty"`
+	ExternalIp   string                 `json:"externalip,omitempty"`
+	SystemName   string                 `json:"system_name,omitempty"`
+	SystemOrigin *types.Origin          `json:"system_origin,omitempty"`
+	SystemHash   string                 `json:"systemhash,omitempty"`
+	PackName     string                 `json:"pack_name,omitempty"`
+	PackOrigin   *types.Origin          `json:"pack_origin,omitempty"`
+	PackHash     string                 `json:"packhash,omitempty"`
+	OsArch       string                 `json:"osarch,omitempty"`
 }
 
 type XbeeVolume struct {
-	PElement
-	Name string `json:"name,omitempty"`
-	Size int    `json:"size,omitempty"`
+	Provider map[string]interface{} `json:"provider,omitempty"`
+	Name     string                 `json:"name,omitempty"`
+	Size     int                    `json:"size,omitempty"`
 }
 
 type XbeeNet struct {
