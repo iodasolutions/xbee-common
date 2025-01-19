@@ -265,7 +265,7 @@ func downloadInternScp(r io.Reader, w io.Writer) (err *cmd.XbeeError) {
 		return
 	}
 
-	_, err3 := io.Cotpy(w, r)
+	_, err3 := io.Copy(w, r)
 	if err3 != nil {
 		err = cmd.Error("error copying data to local file: %v", err3)
 		return err
