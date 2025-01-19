@@ -13,7 +13,7 @@ import (
 )
 
 type SSHClient struct {
-	conn *ssh.Client
+	*ssh.Client
 }
 
 func Connect(host string, port string, user string) (*SSHClient, *cmd.XbeeError) {
@@ -49,7 +49,7 @@ func Connect(host string, port string, user string) (*SSHClient, *cmd.XbeeError)
 	} else {
 		return nil, cmd.Error("ssh : cannot create session to %s : %v", connexionString, err)
 	}
-	return &SSHClient{conn: conn}, nil
+	return &SSHClient{conn}, nil
 }
 
 func (hr *SSHClient) RunCommand(command string) *cmd.XbeeError {
@@ -57,7 +57,7 @@ func (hr *SSHClient) RunCommand(command string) *cmd.XbeeError {
 }
 
 func (hr *SSHClient) RunCommandToOut(command string) (out string, err *cmd.XbeeError) {
-	sess, err2 := hr.conn.NewSession()
+	sess, err2 := hr.NewSession()
 	if err2 != nil {
 		return "", cmd.Error("cannot create session : %v", err2)
 	}
@@ -84,7 +84,7 @@ func (hr *SSHClient) RunCommandQuiet(command string) *cmd.XbeeError {
 }
 
 func (hr *SSHClient) run(command string, redirectStd bool) (err *cmd.XbeeError) {
-	sess, err2 := hr.conn.NewSession()
+	sess, err2 := hr.NewSession()
 	if err2 != nil {
 		return cmd.Error("cannot create session : %v", err2)
 	}
@@ -160,9 +160,9 @@ func (hr *SSHClient) upload(r io.Reader, length int64, name string, todir newfs.
 	if err = hr.RunCommandQuiet(fmt.Sprintf("sudo mkdir -p %s", todir)); err != nil {
 		return
 	}
-	sess, err2 := hr.conn.NewSession()
+	sess, err2 := hr.NewSession()
 	if err2 != nil {
-		err = cmd.Error("cannot create a session for connection %s: %v", hr.conn.RemoteAddr().String(), err)
+		err = cmd.Error("cannot create a session for connection %s: %v", hr.RemoteAddr().String(), err)
 		return
 	}
 	defer func() {
@@ -194,7 +194,7 @@ func (hr *SSHClient) upload(r io.Reader, length int64, name string, todir newfs.
 	}()
 	command := fmt.Sprintf("sudo /usr/bin/scp -tr %s", todir)
 	if err2 = sess.Run(command); err2 != nil {
-		err = cmd.Error("command [%s] for session [%s] failed: %v", command, hr.conn.RemoteAddr().String(), err)
+		err = cmd.Error("command [%s] for session [%s] failed: %v", command, hr.RemoteAddr().String(), err)
 	}
 	return
 }
@@ -207,7 +207,7 @@ func (hr *SSHClient) UploadContent(content string, path newfs.File) (err *cmd.Xb
 
 func (hr *SSHClient) Download(remoteFile newfs.File, todir newfs.Folder) (err *cmd.XbeeError) {
 	todir.EnsureExists()
-	sess, err2 := hr.conn.NewSession()
+	sess, err2 := hr.NewSession()
 	if err2 != nil {
 		return cmd.Error("cannot create a session for connection: %v", err2)
 	}
