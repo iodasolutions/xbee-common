@@ -16,3 +16,4 @@ func CacheElements() Folder  { return xbeeIntern().ChildFolder("cache-elements")
 func LogsFolder() Folder     { return xbeeIntern().ChildFolder("logs") }
 func Rsa() *RsaGenerator     { return NewRsaGen(SSHFolder()) }
 func TmpDir() Folder         { return xbeeIntern().ChildFolder("tmp") }
+func Volumes() Folder        { return xbeeIntern().ChildFolder("volumes") }
