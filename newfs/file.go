@@ -74,9 +74,9 @@ func (f File) Save(outs ...interface{}) {
 
 func (f File) OpenFileForCreation() (*os.File, *cmd.XbeeError) {
 	f.Dir().Create()
-	fd, err := os.Create(f.String())
-	if err != nil {
-		return nil, cmd.Error("cannot create file %s : %v", f, err)
+	fd, err2 := os.Create(f.String())
+	if err2 != nil {
+		return nil, cmd.Error("cannot create file %s : %v", f, err2)
 	}
 	return fd, nil
 }
