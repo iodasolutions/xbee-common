@@ -42,6 +42,32 @@ type XbeeHost struct {
 	OsArch       string                 `json:"osarch,omitempty"`
 }
 
+func (ph *XbeeHost) EffectivePackOrigin() *types.Origin {
+	if ph.PackOrigin == nil {
+		return ph.SystemOrigin
+	}
+	return ph.PackOrigin
+}
+func (ph *XbeeHost) EffectivePackName() string {
+	if ph.PackName != "" {
+		return ph.PackName
+	}
+	return ph.SystemName
+}
+func (ph *XbeeHost) EffectiveHash() string {
+	if ph.PackOrigin == nil {
+		return ph.SystemHash
+	}
+	return ph.PackHash
+}
+func (ph *XbeeHost) DisplayName() string {
+	name := ph.EffectivePackName()
+	if ph.PackOrigin != nil {
+		name += "-" + ph.SystemName
+	}
+	return name
+}
+
 type XbeeVolume struct {
 	Provider map[string]interface{} `json:"provider,omitempty"`
 	Name     string                 `json:"name,omitempty"`
