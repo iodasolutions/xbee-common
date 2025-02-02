@@ -2,18 +2,18 @@ package newfs
 
 func ChildXbee(parent Folder) Folder { return parent.ChildFolder(".xbee") }
 
-func xbeeIntern() Folder {
+func GlobalXbeeFolder() Folder {
 	return ChildXbee(Home)
 }
 
-func SSHFolder() Folder { return xbeeIntern().ChildFolder(".ssh") }
+func SSHFolder() Folder { return GlobalXbeeFolder().ChildFolder(".ssh") }
 func CachedFileForUrl(rawUrl string) File {
 	fd, name := CacheArtefacts().SubFolderForLocation(rawUrl)
 	return fd.ChildFile(name)
 }
-func CacheArtefacts() Folder { return xbeeIntern().ChildFolder("cache-artefacts") }
-func CacheElements() Folder  { return xbeeIntern().ChildFolder("cache-elements") }
-func LogsFolder() Folder     { return xbeeIntern().ChildFolder("logs") }
+func CacheArtefacts() Folder { return GlobalXbeeFolder().ChildFolder("cache-artefacts") }
+func CacheElements() Folder  { return GlobalXbeeFolder().ChildFolder("cache-elements") }
+func LogsFolder() Folder     { return GlobalXbeeFolder().ChildFolder("logs") }
 func Rsa() *RsaGenerator     { return NewRsaGen(SSHFolder()) }
-func TmpDir() Folder         { return xbeeIntern().ChildFolder("tmp") }
-func Volumes() Folder        { return xbeeIntern().ChildFolder("volumes") }
+func TmpDir() Folder         { return GlobalXbeeFolder().ChildFolder("tmp") }
+func Volumes() Folder        { return GlobalXbeeFolder().ChildFolder("volumes") }
