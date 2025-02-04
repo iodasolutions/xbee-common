@@ -346,6 +346,7 @@ func (f File) Unzip() *cmd.XbeeError {
 	return nil
 }
 func (f File) Untar(destDir string) *cmd.XbeeError {
+	NewFolder(destDir).EnsureEmpty()
 	// Ouvrir le fichier .tar
 	file, err := os.Open(f.String())
 	if err != nil {
