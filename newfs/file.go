@@ -1,6 +1,7 @@
 package newfs
 
 import (
+	"archive/tar"
 	"archive/zip"
 	"bytes"
 	"compress/bzip2"
@@ -342,5 +343,62 @@ func (f File) Unzip() *cmd.XbeeError {
 		}
 	}
 
+	return nil
+}
+func (f File) Untar(destDir string) *cmd.XbeeError {
+	// Ouvrir le fichier .tar
+	file, err := os.Open(f.String())
+	if err != nil {
+		return cmd.Error("cannot open file %s : %v", f.String(), err)
+	}
+	defer file.Close()
+
+	// Créer un lecteur tar
+	tarReader := tar.NewReader(file)
+
+	// Parcourir chaque fichier dans l'archive tar
+	for {
+		header, err := tarReader.Next()
+		if err == io.EOF {
+			break // Fin de l'archive
+		}
+		if err != nil {
+			return cmd.Error("cannot read file %s : %v", f.String(), err)
+		}
+
+		// Construire le chemin complet du fichier à extraire
+		targetPath := filepath.Join(destDir, header.Name)
+
+		switch header.Typeflag {
+		case tar.TypeDir:
+			// Si c'est un répertoire, le créer
+			if err := os.MkdirAll(targetPath, os.FileMode(header.Mode)); err != nil {
+				return cmd.Error("cannot create directory %s : %v", targetPath, err)
+			}
+		case tar.TypeReg:
+			// Si c'est un fichier, l'extraire
+			if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
+				return cmd.Error("cannot create directory %s : %v", targetPath, err)
+			}
+
+			outFile, err := os.Create(targetPath)
+			if err != nil {
+				return cmd.Error("cannot create file for %s : %v", targetPath, err)
+			}
+			defer outFile.Close()
+
+			// Copier le contenu du fichier tar dans le fichier de sortie
+			if _, err := io.Copy(outFile, tarReader); err != nil {
+				return cmd.Error("cannot add content to file %s : %v", targetPath, err)
+			}
+
+			// Appliquer les permissions d'origine
+			if err := os.Chmod(targetPath, os.FileMode(header.Mode)); err != nil {
+				return cmd.Error("cannot chmod file %s : %v", targetPath, err)
+			}
+		default:
+			fmt.Printf("Type de fichier non supporté : %s\n", header.Name)
+		}
+	}
 	return nil
 }
