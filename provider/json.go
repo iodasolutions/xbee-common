@@ -8,6 +8,7 @@ const (
 	DestroyVolumes Action = "destroyvolumes"
 	Infos          Action = "instanceinfos"
 	Image          Action = "image"
+	Down           Action = "down"
 )
 
 type DestroyVolumesRequest struct {

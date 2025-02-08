@@ -43,6 +43,7 @@ func Execute(p Provider, a Admin) {
 func buildCmdTree(root *cmd.Command) *cmd.XbeeError {
 	return root.AddCommands(upCommand(),
 		deleteCommand(),
+		downCommand(),
 		destroyVolumesCommand(),
 		instanceInfosCommand(),
 		imageCommand())
