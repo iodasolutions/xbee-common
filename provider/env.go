@@ -12,18 +12,27 @@ func envJson() newfs.File {
 	return newfs.ChildXbee(newfs.CWD()).ChildFileJson("env")
 }
 
-func Save(e *Env) {
-	envJson().Save(e)
-}
-
 type Env struct {
 	Provider           map[string]interface{} `json:"provider,omitempty"`
 	Id                 string                 `json:"id"`
 	Name               string                 `json:"name"`
-	Hosts              []*XbeeHost            `json:"hosts,omitempty"`
-	Volumes            []*XbeeVolume          `json:"volumes,omitempty"`
+	Hosts              map[string]*XbeeHost   `json:"hosts,omitempty"`
+	Volumes            map[string]*XbeeVolume `json:"volumes,omitempty"`
 	Nets               []*XbeeNet             `json:"nets,omitempty"`
 	SystemProviderData map[string]interface{} `json:"system_provider_data,omitempty"`
+}
+
+func (e *Env) VolumesLinkedToHosts() (result []*XbeeVolume) {
+	for _, h := range e.Hosts {
+		for name := range h.Volumes {
+			result = append(result, e.Volumes[name])
+		}
+	}
+	return
+}
+
+func (e *Env) Save() {
+	envJson().Save(e)
 }
 
 type XbeeHost struct {
@@ -99,14 +108,14 @@ func initEnv() {
 	}
 }
 
-func Hosts() (result []*XbeeHost) {
+func Hosts() (result map[string]*XbeeHost) {
 	env.once.Do(func() {
 		initEnv()
 	})
 	return env.Env.Hosts
 }
 
-func VolumesForEnv() (result []*XbeeVolume) {
+func VolumesForEnv() (result map[string]*XbeeVolume) {
 	env.once.Do(func() {
 		initEnv()
 	})
