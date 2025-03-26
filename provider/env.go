@@ -30,7 +30,7 @@ type XbeeHost struct {
 	Provider     map[string]interface{} `json:"provider,omitempty"`
 	Name         string                 `json:"name,omitempty"`
 	Ports        []string               `json:"ports,omitempty"`
-	Volumes      []string               `json:"volumes,omitempty"`
+	Volumes      map[string][]string    `json:"volumes,omitempty"`
 	User         string                 `json:"user,omitempty"`
 	ExternalIp   string                 `json:"externalip,omitempty"`
 	SystemName   string                 `json:"system_name,omitempty"`
