@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/iodasolutions/xbee-common/cmd"
 	"github.com/iodasolutions/xbee-common/newfs"
+	"github.com/iodasolutions/xbee-common/util"
 )
 
 func instanceInfosCommand() *cmd.Command {
@@ -35,6 +36,16 @@ func (i InstanceInfos) ToMap() map[string]*InstanceInfo {
 	}
 	return result
 }
+
+func (i InstanceInfos) FilterByStates(states ...string) (result InstanceInfos) {
+	for _, hr := range i {
+		if util.Contains(states, hr.State) {
+			result = append(result, hr)
+		}
+	}
+	return
+}
+
 func InstanceInfosFromProvider() (instanceInfos InstanceInfos, err *cmd.XbeeError) {
 	return InstanceInfosFromProviderFor(newfs.CWD())
 }
