@@ -1,6 +1,6 @@
 module github.com/iodasolutions/xbee-common
 
-go 1.21.1
+go 1.25
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.30.4
@@ -10,7 +10,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.61.0
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
 	github.com/ulikunitz/xz v0.5.12
-	golang.org/x/crypto v0.22.0
+	golang.org/x/crypto v0.35.0
 )
 
 require (
@@ -28,5 +28,5 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.26.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.30.5 // indirect
 	github.com/aws/smithy-go v1.20.4 // indirect
-	golang.org/x/sys v0.19.0 // indirect
+	golang.org/x/sys v0.30.0 // indirect
 )

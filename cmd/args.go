@@ -14,7 +14,6 @@ func NewArgsParser(options []*Option) *ArgsParser {
 	}
 }
 
-
 func (ap *ArgsParser) ParseArgs(args ...string) (realArgs []string) {
 	var skipIteration bool
 	for i, arg := range args {
@@ -25,7 +24,7 @@ func (ap *ArgsParser) ParseArgs(args ...string) (realArgs []string) {
 			if option != nil {
 				if option.IsBool() {
 					option.Enable(true)
-				} else if i < len(args) - 1{
+				} else if i < len(args)-1 {
 					option.AddValue(args[i+1])
 					skipIteration = true
 				} else { //degenerated case.

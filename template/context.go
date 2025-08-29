@@ -7,7 +7,6 @@ import (
 
 type ContextMap map[string]interface{}
 
-
 func (p *ContextMap) Eval(path string) interface{} {
 	var result interface{}
 	pathElements := strings.Split(path, ".")
