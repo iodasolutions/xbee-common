@@ -1,11 +1,12 @@
 package provider
 
 import (
+	"sync"
+
 	"github.com/iodasolutions/xbee-common/cmd"
 	"github.com/iodasolutions/xbee-common/newfs"
 	"github.com/iodasolutions/xbee-common/types"
 	"github.com/iodasolutions/xbee-common/util"
-	"sync"
 )
 
 func envJson() newfs.File {

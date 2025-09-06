@@ -2,12 +2,13 @@ package template
 
 import (
 	"bytes"
-	"github.com/iodasolutions/xbee-common/cmd"
 	"io"
 	"net"
 	"path/filepath"
 	"strings"
 	"text/template"
+
+	"github.com/iodasolutions/xbee-common/cmd"
 )
 
 func Output(s *string, data interface{}, funcMap map[string]interface{}) (err *cmd.XbeeError) {
@@ -83,6 +84,7 @@ func DefaultFunctions() template.FuncMap {
 		"minorVersion": minorVersion,
 		"patchVersion": patchVersion,
 		"gt":           gt,
+		"mapArch":      mapArch,
 	}
 }
 
@@ -149,4 +151,14 @@ func gt(a, b interface{}) bool {
 		}
 	}
 	return false
+}
+
+func mapArch(arch string) string {
+	switch arch {
+	case "amd64":
+		return "x86_64"
+	case "arm64":
+		return "aarch64"
+	}
+	return "unknown"
 }
