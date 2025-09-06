@@ -156,7 +156,7 @@ func gt(a, b interface{}) bool {
 func mapArch(arch string) string {
 	switch arch {
 	case "amd64":
-		return "x86_64"
+		return "x64"
 	case "arm64":
 		return "aarch64"
 	}
