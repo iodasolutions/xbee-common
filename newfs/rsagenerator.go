@@ -10,12 +10,13 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"io"
+	"sync"
+
 	"github.com/iodasolutions/xbee-common/cmd"
 	"github.com/iodasolutions/xbee-common/log2"
 	"github.com/iodasolutions/xbee-common/util"
 	"golang.org/x/crypto/ssh"
-	"io"
-	"sync"
 )
 
 //key.pem
@@ -91,7 +92,9 @@ func (rg *RsaGenerator) EnsureRootKeysExist(ctx context.Context) {
 	}
 }
 func (rg *RsaGenerator) createAndPersistRootCertificate() *cmd.XbeeError {
-	rg.sshFolder.EnsureEmpty()
+	if err := rg.sshFolder.EnsureEmpty(); err != nil {
+		return err
+	}
 	rg.sshFolder.ChMod(0700)
 	ca, caPrivKey := util.NewRootCA()
 	// create the CA

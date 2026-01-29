@@ -2,14 +2,15 @@ package newfs
 
 import (
 	"fmt"
-	"github.com/iodasolutions/xbee-common/cmd"
-	"github.com/iodasolutions/xbee-common/exec2"
-	"github.com/iodasolutions/xbee-common/stringutils"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/iodasolutions/xbee-common/cmd"
+	"github.com/iodasolutions/xbee-common/exec2"
+	"github.com/iodasolutions/xbee-common/stringutils"
 )
 
 func CWD() Folder {
@@ -37,17 +38,15 @@ func NewFolder(path string) Folder {
 	return Folder{Path(path)}
 }
 
-func (fd Folder) EnsureEmpty() {
-	fd.EnsureExists()
-	fd.DeleteDirContent()
+func (fd Folder) EnsureEmpty() *cmd.XbeeError {
+	return fd.EnsureExists().DeleteDirContent()
 }
 
-func (fd Folder) EnsureExists() bool {
+func (fd Folder) EnsureExists() Folder {
 	if !fd.Exists() {
 		fd.Create()
-		return true
 	}
-	return false
+	return fd
 }
 
 func (fd Folder) Create() Folder {

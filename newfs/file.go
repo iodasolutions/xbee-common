@@ -8,13 +8,14 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"fmt"
-	"github.com/iodasolutions/xbee-common/cmd"
-	"github.com/iodasolutions/xbee-common/template"
-	"github.com/ulikunitz/xz"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/iodasolutions/xbee-common/cmd"
+	"github.com/iodasolutions/xbee-common/template"
+	"github.com/ulikunitz/xz"
 )
 
 type File struct {
@@ -346,7 +347,9 @@ func (f File) Unzip() *cmd.XbeeError {
 	return nil
 }
 func (f File) Untar(destDir string) *cmd.XbeeError {
-	NewFolder(destDir).EnsureEmpty()
+	if err := NewFolder(destDir).EnsureEmpty(); err != nil {
+		return err
+	}
 	// Ouvrir le fichier .tar
 	file, err := os.Open(f.String())
 	if err != nil {
