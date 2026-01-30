@@ -208,16 +208,19 @@ func (fd Folder) CopyDirContentToDir(dstDir Folder) {
 }
 
 func (fd Folder) CopyDirContentToDirKeepOwner(dstDir Folder, keepOwner bool) {
-	dstDir.Create()
-	dstDir.ChMod(fd.Mod())
-	if keepOwner {
-		uid, gid := fd.Owner()
-		if uid != -1 {
-			if err := os.Chown(dstDir.String(), uid, gid); err != nil {
-				panic(fmt.Errorf("Cannot change owner %d for file path %s : %v\n", uid, dstDir, err)) //TODO deals with errors
+	if !dstDir.Exists() {
+		dstDir.Create()
+		dstDir.ChMod(fd.Mod())
+		if keepOwner {
+			uid, gid := fd.Owner()
+			if uid != -1 {
+				if err := os.Chown(dstDir.String(), uid, gid); err != nil {
+					panic(fmt.Errorf("Cannot change owner %d for file path %s : %v\n", uid, dstDir, err)) //TODO deals with errors
+				}
 			}
 		}
 	}
+
 	entries, err := ioutil.ReadDir(fd.String())
 	if err != nil {
 		panic(fmt.Errorf("CopyDirContentToDir : Cannot read conent of src dir %s : %v", fd, err))
