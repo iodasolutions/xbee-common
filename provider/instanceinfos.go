@@ -2,6 +2,7 @@ package provider
 
 import (
 	"fmt"
+
 	"github.com/iodasolutions/xbee-common/cmd"
 	"github.com/iodasolutions/xbee-common/newfs"
 	"github.com/iodasolutions/xbee-common/util"
@@ -26,7 +27,7 @@ func doInstanceInfo(_ []string) *cmd.XbeeError {
 type InstanceInfos []*InstanceInfo
 
 func (i InstanceInfos) Save() {
-	newfs.ChildXbee(newfs.CWD()).ChildFileJson("InstanceInfos").Save(i)
+	newfs.ChildXbee(newfs.CWD()).ChildFileYml("InstanceInfos").Save(i)
 }
 
 func (i InstanceInfos) ToMap() map[string]*InstanceInfo {
@@ -51,7 +52,7 @@ func InstanceInfosFromProvider() (instanceInfos InstanceInfos, err *cmd.XbeeErro
 }
 
 func InstanceInfosFromProviderFor(fd newfs.Folder) (instanceInfos InstanceInfos, err *cmd.XbeeError) {
-	f := newfs.ChildXbee(fd).ChildFileJson("InstanceInfos")
+	f := newfs.ChildXbee(fd).ChildFileYml("InstanceInfos")
 	if !f.Exists() {
 		err = cmd.Error("file %s MUST exist", f)
 		return

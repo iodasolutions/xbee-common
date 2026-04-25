@@ -56,13 +56,13 @@ func NewNodeFromFile(f newfs.File) (*yaml.Node, *cmd.XbeeError) {
 	if err != nil {
 		return nil, err
 	}
-	return doc.Content[0], nil
+	if len(doc.Content) > 0 {
+		return doc.Content[0], nil
+	}
+	return doc, nil
 }
 func FindNodeNoError(root *yaml.Node, path string) *yaml.Node {
-	y, err := FindNode(root, path)
-	if err != nil {
-		panic(err)
-	}
+	y, _ := FindNode(root, path)
 	return y
 }
 func FindNode(root *yaml.Node, path string) (*yaml.Node, *cmd.XbeeError) {
@@ -353,11 +353,34 @@ func collectScalarLeafKeys(node *yaml.Node, path string, out map[string]struct{}
 	}
 }
 
-func PromoteScalarToMap(node *yaml.Node, newKey string) {
-	// sauvegarde de l'ancienne valeur
-	oldValue := node.Value
+func PromoteInPlace(node *yaml.Node, key string) {
+	// 1. copier l'ancien node
+	old := CloneNode(node)
 
-	// transformaton en mapping
+	// 2. transformer le node courant en map
+	node.Kind = yaml.MappingNode
+	node.Tag = "!!map"
+
+	// reset propre
+	node.Value = ""
+	node.Content = nil
+
+	// 3. injecter key + ancienne valeur
+	node.Content = []*yaml.Node{
+		{
+			Kind:  yaml.ScalarNode,
+			Tag:   "!!str",
+			Value: key,
+		},
+		old,
+	}
+}
+
+func PromoteToMap(node *yaml.Node, key string) {
+	// sauvegarde de l'ancienne valeur
+	oldValue := node.Content
+
+	// transformation en mapping
 	node.Kind = yaml.MappingNode
 	node.Tag = "!!map"
 
@@ -365,15 +388,14 @@ func PromoteScalarToMap(node *yaml.Node, newKey string) {
 		{
 			Kind:  yaml.ScalarNode,
 			Tag:   "!!str",
-			Value: newKey,
+			Value: key,
 		},
 		{
-			Kind:  yaml.ScalarNode,
-			Tag:   "!!str",
-			Value: oldValue,
+			Kind:    yaml.SequenceNode,
+			Tag:     "!!seq",
+			Content: oldValue,
 		},
 	}
-
 	// important : vider l'ancien contenu scalaire
 	node.Value = ""
 }
@@ -413,30 +435,6 @@ func PromoteScalarToSequence(node *yaml.Node) {
 	}
 }
 
-func PromoteSequenceToMap(node *yaml.Node, key string) {
-	// sauvegarde de l'ancienne valeur
-	oldValue := node.Content
-
-	// transformation en mapping
-	node.Kind = yaml.MappingNode
-	node.Tag = "!!map"
-
-	node.Content = []*yaml.Node{
-		{
-			Kind:  yaml.ScalarNode,
-			Tag:   "!!str",
-			Value: key,
-		},
-		{
-			Kind:    yaml.SequenceNode,
-			Tag:     "!!seq",
-			Content: oldValue,
-		},
-	}
-	// important : vider l'ancien contenu scalaire
-	node.Value = ""
-}
-
 func AddStringToMap(node *yaml.Node, key string, value string) {
 
 	keyNode := &yaml.Node{
@@ -460,14 +458,6 @@ func PrintNode(node *yaml.Node) {
 		panic(err)
 	}
 	fmt.Println(string(out))
-}
-
-func NodeToString(node *yaml.Node) string {
-	out, err := yaml.Marshal(node)
-	if err != nil {
-		panic(err)
-	}
-	return string(out)
 }
 
 func AddMap(node *yaml.Node, key string) *yaml.Node {
@@ -494,16 +484,8 @@ func AddMapValue(node *yaml.Node, key string, value *yaml.Node) *yaml.Node {
 		Tag:   "!!str",
 		Value: key,
 	}
-
-	valueNode := &yaml.Node{
-		Kind:    yaml.MappingNode,
-		Tag:     "!!map",
-		Content: []*yaml.Node{value},
-	}
-
-	node.Content = append(node.Content, keyNode, valueNode)
-
-	return valueNode
+	node.Content = append(node.Content, keyNode, value)
+	return value
 }
 
 func AddSequence(node *yaml.Node, key string) *yaml.Node {
@@ -786,21 +768,34 @@ func SaveNodeToFile(node *yaml.Node, f newfs.File) *cmd.XbeeError {
 	return nil
 }
 
-func NodeToInterface(node *yaml.Node) (interface{}, *cmd.XbeeError) {
-	var out interface{}
-	err := node.Decode(&out)
-	return out, cmd.Error("decode node %s: %w", node, err)
+func NodeTo[T any](node *yaml.Node) (*T, *cmd.XbeeError) {
+	var out T
+	if node == nil {
+		return &out, cmd.Error("node is nil")
+	}
+	if err := node.Decode(&out); err != nil {
+		return &out, cmd.Error("decode yaml: %w", err)
+	}
+	return &out, nil
 }
-func NodeToInterfaceNoError(node *yaml.Node) interface{} {
-	out, err := NodeToInterface(node)
+func NodeToInterfaceNoError[T any](node *yaml.Node) T {
+	out, err := NodeTo[T](node)
 	if err != nil {
 		panic(err)
 	}
-	return out
+	return *out
+}
+
+func NodeToString(node *yaml.Node) string {
+	out, err := yaml.Marshal(node)
+	if err != nil {
+		panic(err)
+	}
+	return string(out)
 }
 
 // CollectKeys retourne toutes les clés sous forme de slice de string
-func Leaves(node *yaml.Node) []string {
+func LeaveKeys(node *yaml.Node) []string {
 	var keys []string
 	collectKeysRecursive(node, &keys)
 	return keys
@@ -863,6 +858,9 @@ func ChangePropertyValue(node *yaml.Node, key string, value *yaml.Node) {
 }
 
 func Resolve(y *yaml.Node, ctxMap interface{}) (*yaml.Node, *cmd.XbeeError) {
+	if y == nil {
+		return nil, nil
+	}
 	s := NodeToString(y)
 	if err := template.Output(&s, ctxMap, nil); err != nil {
 		return nil, cmd.Error("cannot parse %s with [%v]: %v", s, ctxMap, err)
@@ -871,7 +869,7 @@ func Resolve(y *yaml.Node, ctxMap interface{}) (*yaml.Node, *cmd.XbeeError) {
 	if err != nil {
 		return nil, cmd.Error("cannot parse %s with [%v]: %v", s, ctxMap, err)
 	}
-	return result, nil
+	return result.Content[0], nil
 }
 
 func ConvertYamlNode(node *yaml.Node) interface{} {
@@ -1067,4 +1065,293 @@ func walk(node *yaml.Node, currentPath string, paths *[]string) {
 		// feuille atteinte
 		*paths = append(*paths, currentPath)
 	}
+}
+
+func EnsureDefault(y *yaml.Node, path string, value string) {
+	n := FindNodeNoError(y, path)
+	if n.Value == "" {
+		n.Value = value
+	}
+}
+
+// EnsureScalarWithDefaultPath garantit qu'un chemin (format "a.b.c") existe,
+// que la feuille est un scalaire, et qu'elle contient une valeur.
+// Si vide, la valeur par défaut est appliquée.
+func EnsureScalarWithDefaultPath(root *yaml.Node, path string, defaultValue string) *cmd.XbeeError {
+	if root == nil {
+		return cmd.Error("root is nil")
+	}
+
+	// Nettoyage du path
+	path = strings.TrimSpace(path)
+	if path == "" {
+		return cmd.Error("path is empty")
+	}
+
+	parts := strings.Split(path, ".")
+
+	// Si root non initialisé → map
+	if root.Kind == 0 {
+		root.Kind = yaml.MappingNode
+		root.Tag = "!!map"
+	}
+
+	if root.Kind != yaml.MappingNode {
+		return cmd.Error("root is not a mapping node")
+	}
+
+	current := root
+
+	for i, key := range parts {
+		key = strings.TrimSpace(key)
+		if key == "" {
+			return cmd.Error("invalid empty key in path at position %d", i)
+		}
+
+		if current.Kind != yaml.MappingNode {
+			return cmd.Error("node at %v is not a mapping", parts[:i])
+		}
+
+		var next *yaml.Node
+
+		// Recherche de la clé
+		for j := 0; j < len(current.Content); j += 2 {
+			k := current.Content[j]
+			v := current.Content[j+1]
+
+			if k.Value == key {
+				next = v
+				break
+			}
+		}
+
+		// Création si absent
+		if next == nil {
+			keyNode := &yaml.Node{
+				Kind:  yaml.ScalarNode,
+				Tag:   "!!str",
+				Value: key,
+			}
+
+			if i == len(parts)-1 {
+				// feuille
+				next = &yaml.Node{
+					Kind:  yaml.ScalarNode,
+					Tag:   "!!str",
+					Value: defaultValue,
+				}
+			} else {
+				next = &yaml.Node{
+					Kind: yaml.MappingNode,
+					Tag:  "!!map",
+				}
+			}
+
+			current.Content = append(current.Content, keyNode, next)
+		}
+
+		// Si feuille
+		if i == len(parts)-1 {
+			if next.Kind != yaml.ScalarNode {
+				next.Kind = yaml.ScalarNode
+				next.Tag = "!!str"
+				next.Content = nil
+			}
+
+			if next.Value == "" {
+				next.Value = defaultValue
+			}
+
+			return nil
+		}
+
+		current = next
+	}
+
+	return nil
+}
+
+func EnsureStringList(node *yaml.Node, key string) (*yaml.Node, *cmd.XbeeError) {
+	if node == nil {
+		return nil, cmd.Error("node is nil")
+	}
+
+	if node.Kind != yaml.MappingNode {
+		return nil, cmd.Error("node is not a mapping node")
+	}
+
+	// Parcours des clés
+	for i := 0; i < len(node.Content); i += 2 {
+		k := node.Content[i]
+		v := node.Content[i+1]
+
+		if k.Value == key {
+			switch v.Kind {
+
+			case yaml.ScalarNode:
+				// Transformer string -> []string
+				newSeq := &yaml.Node{
+					Kind: yaml.SequenceNode,
+					Tag:  "!!seq",
+					Content: []*yaml.Node{
+						{
+							Kind:  yaml.ScalarNode,
+							Tag:   "!!str",
+							Value: v.Value,
+						},
+					},
+				}
+				node.Content[i+1] = newSeq
+				return newSeq, nil
+
+			case yaml.SequenceNode:
+				// Vérifier que tous les éléments sont des strings
+				for _, item := range v.Content {
+					if item.Kind != yaml.ScalarNode {
+						return nil, cmd.Error("sequence contains non-scalar value for key %s", key)
+					}
+				}
+				return v, nil
+
+			default:
+				return nil, cmd.Error("invalid type for key %s: expected string or list", key)
+			}
+		}
+	}
+
+	// Clé absente → on la crée avec une liste vide
+	result := &yaml.Node{
+		Kind:    yaml.SequenceNode,
+		Tag:     "!!seq",
+		Content: []*yaml.Node{},
+	}
+	node.Content = append(node.Content,
+		&yaml.Node{
+			Kind:  yaml.ScalarNode,
+			Tag:   "!!str",
+			Value: key,
+		},
+		result,
+	)
+
+	return result, nil
+}
+
+func Leaves(node *yaml.Node) []*yaml.Node {
+	var result []*yaml.Node
+
+	var walk func(n *yaml.Node)
+	walk = func(n *yaml.Node) {
+		if n == nil {
+			return
+		}
+
+		switch n.Kind {
+		case yaml.DocumentNode:
+			if len(n.Content) == 0 {
+				result = append(result, n)
+				return
+			}
+			for _, child := range n.Content {
+				walk(child)
+			}
+
+		case yaml.MappingNode:
+			if len(n.Content) == 0 {
+				result = append(result, n)
+				return
+			}
+
+			// Dans un mapping, Content contient :
+			// key0, value0, key1, value1, ...
+			// Les clés ne sont généralement pas considérées comme des feuilles utiles.
+			for i := 1; i < len(n.Content); i += 2 {
+				walk(n.Content[i])
+			}
+
+		case yaml.SequenceNode:
+			if len(n.Content) == 0 {
+				result = append(result, n)
+				return
+			}
+			for _, child := range n.Content {
+				walk(child)
+			}
+
+		default:
+			result = append(result, n)
+		}
+	}
+
+	walk(node)
+	return result
+}
+
+type Leaf struct {
+	Path  string
+	Value string
+	Node  *yaml.Node
+}
+
+func LeafValues(node *yaml.Node) []Leaf {
+	var result []Leaf
+
+	var walk func(n *yaml.Node, path string)
+	walk = func(n *yaml.Node, path string) {
+		if n == nil {
+			return
+		}
+
+		switch n.Kind {
+		case yaml.DocumentNode:
+			if len(n.Content) > 0 {
+				walk(n.Content[0], path)
+			}
+
+		case yaml.MappingNode:
+			if len(n.Content) == 0 {
+				result = append(result, Leaf{Path: path, Value: "", Node: n})
+				return
+			}
+
+			for i := 0; i+1 < len(n.Content); i += 2 {
+				key := n.Content[i]
+				value := n.Content[i+1]
+
+				childPath := key.Value
+				if path != "" {
+					childPath = path + "." + key.Value
+				}
+
+				walk(value, childPath)
+			}
+
+		case yaml.SequenceNode:
+			if len(n.Content) == 0 {
+				result = append(result, Leaf{Path: path, Value: "", Node: n})
+				return
+			}
+
+			for i, child := range n.Content {
+				childPath := fmt.Sprintf("%s[%d]", path, i)
+				walk(child, childPath)
+			}
+
+		case yaml.ScalarNode, yaml.AliasNode:
+			result = append(result, Leaf{
+				Path:  path,
+				Value: n.Value,
+				Node:  n,
+			})
+		default:
+			result = append(result, Leaf{
+				Path:  path,
+				Value: n.Value,
+				Node:  n,
+			})
+		}
+	}
+
+	walk(node, "")
+	return result
 }

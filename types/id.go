@@ -1,7 +1,6 @@
 package types
 
 import (
-	"fmt"
 	"path/filepath"
 	"strings"
 )
@@ -26,24 +25,6 @@ type Origin struct {
 type IdJson struct {
 	Origin
 	Alias string `json:"alias,omitempty"`
-}
-
-// Colon should be used only for log purpose
-func (m *IdJson) Colon() string { return m.withDelimiter(":") }
-
-//func (m *IdJson) ShortName() string {
-//	if m.Alias != "" {
-//		return m.Alias
-//	}
-//	return ShortNameFromOrigin(m.Repo)
-//}
-
-func (m *IdJson) withDelimiter(delimiter string) string {
-	var extension string
-	if m.Commit != "" {
-		extension = delimiter + m.Commit
-	}
-	return fmt.Sprintf("%s%s", m.Origin.Repo, extension)
 }
 
 func (m *IdJson) Clone() IdJson {

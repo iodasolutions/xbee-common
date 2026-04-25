@@ -11,10 +11,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func envJson() newfs.File {
-	return newfs.ChildXbee(newfs.CWD()).ChildFileJson("env")
-}
-
 type Env struct {
 	Provider           *yaml.Node             `json:"provider,omitempty"`
 	Id                 string                 `json:"id"`
@@ -34,8 +30,11 @@ func (e *Env) VolumesLinkedToHosts() (result []*XbeeVolume) {
 	return
 }
 
+func envYaml() newfs.File {
+	return newfs.ChildXbee(newfs.CWD()).ChildFileYml("env")
+}
 func (e *Env) Save() {
-	envJson().Save(e)
+	envYaml().Save(e)
 }
 
 type XbeeHost struct {
@@ -98,7 +97,7 @@ var env struct {
 
 func initEnv() {
 	var err *cmd.XbeeError
-	if env.Env, err = newfs.Unmarshal[*Env](envJson()); err != nil {
+	if env.Env, err = newfs.Unmarshal[*Env](envYaml()); err != nil {
 		newfs.DoExitOnError(err)
 	}
 

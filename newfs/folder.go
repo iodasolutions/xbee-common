@@ -102,9 +102,6 @@ func (fd Folder) ChildFolder(name string) Folder {
 	path := fd.Child(name)
 	return Folder{Path: path}
 }
-func (fd Folder) ChildFileJson(name string) File {
-	return fd.ChildFile(name + jsonExt)
-}
 func (fd Folder) ChildFileYml(name string) File {
 	return fd.ChildFile(name + YamlExt)
 }
@@ -303,4 +300,24 @@ func (fd Folder) RandomFile() File {
 
 func (fd Folder) RandomChildFolder() Folder {
 	return fd.ChildFolder(stringutils.RandomString())
+}
+
+func (fd Folder) IsRoot() bool {
+	path := fd.String()
+	if filepath.Dir(path) != path {
+		return false
+	}
+	// Optionnel : éviter le faux positif "C:"
+	if vol := filepath.VolumeName(path); vol != "" && path == vol {
+		return false
+	}
+	return true
+}
+func (fd Folder) Parent() Folder {
+	dir := filepath.Dir(fd.String())
+	return NewFolder(dir)
+}
+func (fd Folder) IsGitRepo() bool {
+	child := fd.Child(".git")
+	return child.Exists() && child.IsDir()
 }

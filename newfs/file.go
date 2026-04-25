@@ -16,6 +16,7 @@ import (
 	"github.com/iodasolutions/xbee-common/cmd"
 	"github.com/iodasolutions/xbee-common/template"
 	"github.com/ulikunitz/xz"
+	"gopkg.in/yaml.v3"
 )
 
 type File struct {
@@ -55,7 +56,7 @@ func (f File) ContentBytes() []byte {
 
 func Unmarshal[T any](f File) (T, *cmd.XbeeError) {
 	var t T
-	if err := json.Unmarshal(f.ContentBytes(), &t); err != nil {
+	if err := yaml.Unmarshal(f.ContentBytes(), &t); err != nil {
 		return t, cmd.Error("cannot unmarshal %s: %s", f, err)
 	}
 	return t, nil
