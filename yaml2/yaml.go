@@ -242,53 +242,6 @@ func EnsurePath(root *yaml.Node, path string) (*yaml.Node, *cmd.XbeeError) {
 	return current, nil
 }
 
-func AddBool(node *yaml.Node, key string, value string) {
-	addScalar(node, key, "!!bool", value)
-}
-
-func AddString(node *yaml.Node, key string, value string) {
-	addScalar(node, key, "!!str", value)
-}
-
-func addScalar(node *yaml.Node, key string, aKind string, value string) {
-	// --- cas mapping ---
-	if node.Kind == yaml.MappingNode {
-
-		keyNode := &yaml.Node{
-			Kind:  yaml.ScalarNode,
-			Tag:   "!!str",
-			Value: key,
-		}
-
-		valueNode := &yaml.Node{
-			Kind:  yaml.ScalarNode,
-			Tag:   aKind,
-			Value: value,
-		}
-
-		node.Content = append(node.Content, keyNode, valueNode)
-		return
-	}
-
-	// --- cas sequence ---
-	if node.Kind == yaml.SequenceNode {
-
-		valueNode := &yaml.Node{
-			Kind:  yaml.ScalarNode,
-			Tag:   aKind,
-			Value: value,
-		}
-
-		node.Content = append(node.Content, valueNode)
-		return
-	}
-
-	// --- cas node vide → on le transforme en scalaire ---
-	node.Kind = yaml.ScalarNode
-	node.Tag = aKind
-	node.Value = value
-}
-
 func FindCommonScalarLeafKeys(node1, node2 *yaml.Node) []string {
 	if node1 == nil || node2 == nil {
 		return nil
@@ -353,29 +306,6 @@ func collectScalarLeafKeys(node *yaml.Node, path string, out map[string]struct{}
 	}
 }
 
-func PromoteInPlace(node *yaml.Node, key string) {
-	// 1. copier l'ancien node
-	old := CloneNode(node)
-
-	// 2. transformer le node courant en map
-	node.Kind = yaml.MappingNode
-	node.Tag = "!!map"
-
-	// reset propre
-	node.Value = ""
-	node.Content = nil
-
-	// 3. injecter key + ancienne valeur
-	node.Content = []*yaml.Node{
-		{
-			Kind:  yaml.ScalarNode,
-			Tag:   "!!str",
-			Value: key,
-		},
-		old,
-	}
-}
-
 func PromoteToMap(node *yaml.Node, key string) {
 	// sauvegarde de l'ancienne valeur
 	oldValue := node.Content
@@ -413,24 +343,6 @@ func PromoteMapToList(node *yaml.Node) {
 			Kind:    yaml.MappingNode,
 			Tag:     "!!map",
 			Content: oldContent,
-		},
-	}
-}
-
-func PromoteScalarToSequence(node *yaml.Node) {
-	if node.Kind != yaml.ScalarNode {
-		panic("This should never happen")
-	}
-	oldValue := node.Value
-	oldTag := node.Tag
-	node.Kind = yaml.SequenceNode
-	node.Tag = "!!seq"
-	node.Value = ""
-	node.Content = []*yaml.Node{
-		{
-			Kind:  yaml.ScalarNode,
-			Tag:   oldTag,
-			Value: oldValue,
 		},
 	}
 }
@@ -488,20 +400,36 @@ func AddMapValue(node *yaml.Node, key string, value *yaml.Node) *yaml.Node {
 	return value
 }
 
-func AddSequence(node *yaml.Node, key string) *yaml.Node {
-	keyNode := &yaml.Node{
-		Kind:  yaml.ScalarNode,
-		Tag:   "!!str",
-		Value: key,
+func indexOf(node *yaml.Node, key string) int {
+	for i := 0; i < len(node.Content); i += 2 {
+		k := node.Content[i]
+		if k.Value == key {
+			return i
+		}
 	}
+	return -1
+}
 
+func AddOrReplaceSequence(node *yaml.Node, key string, values []*yaml.Node) *yaml.Node {
+	if node.Kind != yaml.MappingNode {
+		panic("This should never happen")
+	}
 	valueNode := &yaml.Node{
 		Kind:    yaml.SequenceNode,
 		Tag:     "!!seq",
-		Content: []*yaml.Node{},
+		Content: values,
 	}
-
-	node.Content = append(node.Content, keyNode, valueNode)
+	index := indexOf(node, key)
+	if index == -1 {
+		keyNode := &yaml.Node{
+			Kind:  yaml.ScalarNode,
+			Tag:   "!!str",
+			Value: key,
+		}
+		node.Content = append(node.Content, keyNode, valueNode)
+	} else {
+		node.Content[index+1] = valueNode
+	}
 
 	return valueNode
 }
@@ -674,13 +602,6 @@ func PropertyStringValueFrom(node *yaml.Node, key string) string {
 		return aChild.Value
 	}
 	return ""
-}
-
-func EmptyMap() *yaml.Node {
-	return &yaml.Node{
-		Kind: yaml.MappingNode,
-		Tag:  "!!map",
-	}
 }
 
 // MergeNodes fusionne src dans dst (modifie dst)
@@ -1022,7 +943,7 @@ func Child(y *yaml.Node, key string) *yaml.Node {
 
 func EnsureChildSequence(node *yaml.Node, key string) {
 	if !HasProperty(node, key) {
-		AddSequence(node, key)
+		AddOrReplaceSequence(node, key, nil)
 	} else {
 		child := Child(node, key)
 		if child.Kind != yaml.SequenceNode {
