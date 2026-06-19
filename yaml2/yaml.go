@@ -682,6 +682,7 @@ func SaveNodeToFile(node *yaml.Node, f newfs.File) *cmd.XbeeError {
 		return cmd.Error("close encoder: %w", err)
 	}
 
+	f.Dir().EnsureExists()
 	if err := os.WriteFile(f.String(), buf.Bytes(), 0o644); err != nil {
 		return cmd.Error("write file %s: %w", f.String(), err)
 	}
