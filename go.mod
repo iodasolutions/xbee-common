@@ -1,6 +1,6 @@
 module github.com/iodasolutions/xbee-common
 
-go 1.25
+go 1.23.0
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.30.4

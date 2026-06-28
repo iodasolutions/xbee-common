@@ -56,8 +56,15 @@ func (f File) ContentBytes() []byte {
 
 func Unmarshal[T any](f File) (T, *cmd.XbeeError) {
 	var t T
-	if err := yaml.Unmarshal(f.ContentBytes(), &t); err != nil {
-		return t, cmd.Error("cannot unmarshal %s: %s", f, err)
+	data := f.ContentBytes()
+	if strings.HasSuffix(f.String(), ".json") {
+		if err := json.Unmarshal(data, &t); err != nil {
+			return t, cmd.Error("cannot unmarshal %s: %s", f, err)
+		}
+	} else {
+		if err := yaml.Unmarshal(data, &t); err != nil {
+			return t, cmd.Error("cannot unmarshal %s: %s", f, err)
+		}
 	}
 	return t, nil
 }

@@ -8,11 +8,10 @@ import (
 	"github.com/iodasolutions/xbee-common/types"
 	"github.com/iodasolutions/xbee-common/util"
 	"github.com/iodasolutions/xbee-common/yaml2"
-	"gopkg.in/yaml.v3"
 )
 
 type Env struct {
-	Provider           *yaml.Node             `json:"provider,omitempty"`
+	Provider           *yaml2.JSONNode        `json:"provider,omitempty"`
 	Id                 string                 `json:"id"`
 	Name               string                 `json:"name"`
 	Hosts              map[string]*XbeeHost   `json:"hosts,omitempty"`
@@ -31,26 +30,26 @@ func (e *Env) VolumesLinkedToHosts() (result []*XbeeVolume) {
 }
 
 func envYaml() newfs.File {
-	return newfs.ChildXbee(newfs.CWD()).ChildFileYml("env")
+	return newfs.ChildXbee(newfs.CWD()).ChildFile("env.json")
 }
 func (e *Env) Save() {
 	envYaml().Save(e)
 }
 
 type XbeeHost struct {
-	Provider     *yaml.Node    `json:"provider,omitempty"`
-	Name         string        `json:"name,omitempty"`
-	Ports        []string      `json:"ports,omitempty"`
-	Volumes      []string      `json:"volumes,omitempty"`
-	User         string        `json:"user,omitempty"`
-	ExternalIp   string        `json:"externalip,omitempty"`
-	SystemName   string        `json:"system_name,omitempty"`
-	SystemOrigin *types.Origin `json:"system_origin,omitempty"`
-	SystemHash   string        `json:"systemhash,omitempty"`
-	PackName     string        `json:"pack_name,omitempty"`
-	PackOrigin   *types.Origin `json:"pack_origin,omitempty"`
-	PackHash     string        `json:"packhash,omitempty"`
-	OsArch       string        `json:"osarch,omitempty"`
+	Provider     *yaml2.JSONNode `json:"provider,omitempty"`
+	Name         string          `json:"name,omitempty"`
+	Ports        []string        `json:"ports,omitempty"`
+	Volumes      []string        `json:"volumes,omitempty"`
+	User         string          `json:"user,omitempty"`
+	ExternalIp   string          `json:"externalip,omitempty"`
+	SystemName   string          `json:"system_name,omitempty"`
+	SystemOrigin *types.Origin   `json:"system_origin,omitempty"`
+	SystemHash   string          `json:"systemhash,omitempty"`
+	PackName     string          `json:"pack_name,omitempty"`
+	PackOrigin   *types.Origin   `json:"pack_origin,omitempty"`
+	PackHash     string          `json:"packhash,omitempty"`
+	OsArch       string          `json:"osarch,omitempty"`
 }
 
 func (ph *XbeeHost) EffectivePackOrigin() *types.Origin {
@@ -80,9 +79,9 @@ func (ph *XbeeHost) DisplayName() string {
 }
 
 type XbeeVolume struct {
-	Provider *yaml.Node `json:"provider,omitempty"`
-	Name     string     `json:"name,omitempty"`
-	Size     int        `json:"size,omitempty"`
+	Provider *yaml2.JSONNode `json:"provider,omitempty"`
+	Name     string          `json:"name,omitempty"`
+	Size     int             `json:"size,omitempty"`
 }
 
 type XbeeNet struct {
@@ -101,13 +100,13 @@ func initEnv() {
 		newfs.DoExitOnError(err)
 	}
 
-	hostProvider := yaml2.FindNodeNoError(env.Env.Provider, "host")
+	hostProvider := yaml2.FindNodeNoError(env.Env.Provider.Node(), "host")
 	for index := range env.Env.Hosts {
-		yaml2.MergeNodes(env.Env.Hosts[index].Provider, hostProvider)
+		yaml2.MergeNodes(env.Env.Hosts[index].Provider.Node(), hostProvider)
 	}
-	volumeProvider := yaml2.FindNodeNoError(env.Env.Provider, "volume")
+	volumeProvider := yaml2.FindNodeNoError(env.Env.Provider.Node(), "volume")
 	for index := range env.Env.Volumes {
-		yaml2.MergeNodes(env.Env.Volumes[index].Provider, volumeProvider)
+		yaml2.MergeNodes(env.Env.Volumes[index].Provider.Node(), volumeProvider)
 	}
 }
 
