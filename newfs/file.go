@@ -75,6 +75,24 @@ func (f File) Save(outs ...interface{}) {
 	f.SetContent(buf.String())
 }
 
+func (f File) SaveNode(y *yaml.Node) *cmd.XbeeError {
+	fd, err := f.OpenFileForCreation()
+	if err != nil {
+		return err
+	}
+	defer fd.Close()
+	encoder := yaml.NewEncoder(fd)
+	defer encoder.Close()
+
+	encoder.SetIndent(2) // optionnel
+
+	err2 := encoder.Encode(y)
+	if err2 != nil {
+		return cmd.Error("cannot save %s : %v", f, err2)
+	}
+	return nil
+}
+
 func (f File) OpenFileForCreation() (*os.File, *cmd.XbeeError) {
 	f.Dir().Create()
 	fd, err2 := os.Create(f.String())
