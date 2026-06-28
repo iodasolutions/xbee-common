@@ -8,11 +8,10 @@ import (
 	"github.com/iodasolutions/xbee-common/types"
 	"github.com/iodasolutions/xbee-common/util"
 	"github.com/iodasolutions/xbee-common/yaml2"
-	"gopkg.in/yaml.v3"
 )
 
 type Env struct {
-	Provider           *yaml.Node             `yaml:"provider,omitempty"`
+	Provider           *yaml2.YAMLNode        `yaml:"provider,omitempty"`
 	Id                 string                 `yaml:"id"`
 	Name               string                 `yaml:"name"`
 	Hosts              map[string]*XbeeHost   `yaml:"hosts,omitempty"`
@@ -38,7 +37,7 @@ func (e *Env) Save() {
 }
 
 type XbeeHost struct {
-	Provider     *yaml.Node    `yaml:"provider,omitempty"`
+	Provider     *yaml2.YAMLNode `yaml:"provider,omitempty"`
 	Name         string        `yaml:"name,omitempty"`
 	Ports        []string      `yaml:"ports,omitempty"`
 	Volumes      []string      `yaml:"volumes,omitempty"`
@@ -80,7 +79,7 @@ func (ph *XbeeHost) DisplayName() string {
 }
 
 type XbeeVolume struct {
-	Provider *yaml.Node `yaml:"provider,omitempty"`
+	Provider *yaml2.YAMLNode `yaml:"provider,omitempty"`
 	Name     string     `yaml:"name,omitempty"`
 	Size     int        `yaml:"size,omitempty"`
 }
@@ -101,13 +100,17 @@ func initEnv() {
 		newfs.DoExitOnError(err)
 	}
 
-	hostProvider := yaml2.FindNodeNoError(env.Env.Provider, "host")
+	hostProvider := yaml2.FindNodeNoError(env.Env.Provider.Node(), "host")
 	for index := range env.Env.Hosts {
-		yaml2.MergeNodes(env.Env.Hosts[index].Provider, hostProvider)
+		merged := yaml2.CloneNode(hostProvider)
+		yaml2.MergeNodes(merged, env.Env.Hosts[index].Provider.Node())
+		env.Env.Hosts[index].Provider = yaml2.NewYAMLNode(merged)
 	}
-	volumeProvider := yaml2.FindNodeNoError(env.Env.Provider, "volume")
+	volumeProvider := yaml2.FindNodeNoError(env.Env.Provider.Node(), "volume")
 	for index := range env.Env.Volumes {
-		yaml2.MergeNodes(env.Env.Volumes[index].Provider, volumeProvider)
+		merged := yaml2.CloneNode(volumeProvider)
+		yaml2.MergeNodes(merged, env.Env.Volumes[index].Provider.Node())
+		env.Env.Volumes[index].Provider = yaml2.NewYAMLNode(merged)
 	}
 }
 
