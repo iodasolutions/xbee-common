@@ -12,7 +12,7 @@ const (
 )
 
 type DestroyVolumesRequest struct {
-	Volumes []*XbeeVolume `json:"volumes,omitempty"`
+	Volumes []*XbeeVolume `yaml:"volumes,omitempty"`
 }
 
 func (dr *DestroyVolumesRequest) VolumeNames() (result []string) {

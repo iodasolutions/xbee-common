@@ -7,14 +7,14 @@ import (
 )
 
 type InstanceInfo struct {
-	Name          string `json:"name,omitempty"`
-	State         string `json:"state,omitempty"`
-	ExternalIp    string `json:"externalip,omitempty"`
-	SSHPort       string `json:"sshport,omitempty"`
-	Ip            string `json:"ip,omitempty"`
-	User          string `json:"user,omitempty"`
-	PackIdExist   bool   `json:"packidexist,omitempty"`
-	SystemIdExist bool   `json:"systemidexist,omitempty"`
+	Name          string `yaml:"name,omitempty"`
+	State         string `yaml:"state,omitempty"`
+	ExternalIp    string `yaml:"externalip,omitempty"`
+	SSHPort       string `yaml:"sshport,omitempty"`
+	Ip            string `yaml:"ip,omitempty"`
+	User          string `yaml:"user,omitempty"`
+	PackIdExist   bool   `yaml:"packidexist,omitempty"`
+	SystemIdExist bool   `yaml:"systemidexist,omitempty"`
 }
 
 func (info *InstanceInfo) HostnameScript() string {

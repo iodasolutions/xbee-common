@@ -70,16 +70,32 @@ func Unmarshal[T any](f File) (T, *cmd.XbeeError) {
 }
 
 func (f File) Save(outs ...interface{}) {
-	buf := &bytes.Buffer{}
-	enc := json.NewEncoder(buf)
-	enc.SetEscapeHTML(false)
-	enc.SetIndent("", "    ")
-	for _, anOut := range outs {
-		if err := enc.Encode(anOut); err != nil {
-			panic(fmt.Errorf("cannot encode as json2 to file %s : %v", f, err))
+	if f.IsYAML() {
+		fd, err2 := f.OpenFileForCreation()
+		if err2 != nil {
+			panic(fmt.Errorf("cannot open file %s for writing: %v", f, err2))
 		}
+		defer fd.Close()
+		encoder := yaml.NewEncoder(fd)
+		encoder.SetIndent(2)
+		defer encoder.Close()
+		for _, anOut := range outs {
+			if err := encoder.Encode(anOut); err != nil {
+				panic(fmt.Errorf("cannot encode as yaml to file %s : %v", f, err))
+			}
+		}
+	} else {
+		buf := &bytes.Buffer{}
+		enc := json.NewEncoder(buf)
+		enc.SetEscapeHTML(false)
+		enc.SetIndent("", "    ")
+		for _, anOut := range outs {
+			if err := enc.Encode(anOut); err != nil {
+				panic(fmt.Errorf("cannot encode as json to file %s : %v", f, err))
+			}
+		}
+		f.SetContent(buf.String())
 	}
-	f.SetContent(buf.String())
 }
 
 func (f File) SaveNode(y *yaml.Node) *cmd.XbeeError {
